@@ -13,7 +13,7 @@ cycle-reminders-*.ics
 *.sqlite-shm
 *.sqlite-wal
 .incomplete-node-modules*/
-cycle/
+/cycle/
 dist-android/
 dist-ios/
 
