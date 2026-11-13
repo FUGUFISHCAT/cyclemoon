@@ -1,0 +1,17 @@
+node_modules
+.installed-deps
+.external-deps-link
+.git
+.expo
+.incomplete-node-modules*
+cycle
+dist
+dist-android
+dist-ios
+backups
+exports
+artifacts
+cycle-backup-*.json
+cycle-reminders-*.ics
+*.sqlite*
+tests
