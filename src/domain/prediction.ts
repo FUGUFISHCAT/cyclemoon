@@ -1,5 +1,5 @@
 import type { CycleData, Period } from "./model.ts";
-import { addDays, daysBetween, dayNumber } from "./dates.ts";
+import { addDays, daysBetween, dayNumber, isDateKey } from "./dates.ts";
 
 function median(values: number[]): number {
   const a = [...values].sort((a, b) => a - b),
@@ -44,18 +44,23 @@ export function predict(data: CycleData, today: string): Prediction | null {
   );
   const anchor = periods[periods.length - 1],
     next = addDays(anchor.start, cycleDays);
+  if (!isDateKey(next)) return null;
   const spread =
     valid.length > 1
       ? Math.max(...valid.map((n) => Math.abs(n - cycleDays)))
       : 0;
   // Heuristic display range, NOT a statistical confidence interval.
   const margin = Math.max(data.profile?.irregular ? 7 : 3, Math.ceil(spread));
+  const earliest = addDays(anchor.start, Math.max(15, cycleDays - margin));
+  const latest = addDays(next, margin);
+  const ovulationFrom = addDays(earliest, -18), ovulationTo = addDays(latest, -12);
+  if (![earliest, latest, ovulationFrom, ovulationTo].every(isDateKey)) return null;
   const cycleDay = daysBetween(anchor.start, today) + 1,
     remaining = daysBetween(today, next);
   const confirmed = periods.some(
     (p) =>
       p.start <= today &&
-      (p.end === null ? cycleDay <= periodDays : today <= p.end),
+      (p.end === null ? today === p.start : today <= p.end),
   );
   let phase = confirmed
     ? "经期记录内"
@@ -66,18 +71,18 @@ export function predict(data: CycleData, today: string): Prediction | null {
         : remaining <= 18
           ? "估计排卵附近"
           : "估计卵泡期";
-  if (anchor.end === null && cycleDay > periodDays)
+  if (anchor.end === null && cycleDay > 1)
     phase = "经期尚未确认结束，阶段不确定";
   return {
     next,
-    earliest: addDays(anchor.start, Math.max(15, cycleDays - margin)),
-    latest: addDays(next, margin),
+    earliest,
+    latest,
     cycleDays,
     periodDays,
     cycleDay,
     phase,
-    ovulationFrom: addDays(next, -18),
-    ovulationTo: addDays(next, -12),
+    ovulationFrom,
+    ovulationTo,
     basis: valid.length
       ? "最近 " +
         valid.length +

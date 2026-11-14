@@ -7,6 +7,14 @@ import {
   decodeSnapshot,
 } from "../src/domain/backup.ts";
 import { fixture } from "./helpers.mjs";
+test("v3 备份声明版本和未加密状态；兼容 v2，拒绝缺字段和加密冒充", () => {
+ const v3=JSON.parse(exportBackup(fixture()));
+ assert.equal(v3.schemaVersion,3); assert.equal(v3.appVersion,"0.3.0"); assert.equal(v3.encrypted,false);
+ assert.ok(v3.cycleRecords && v3.dailyLogs && v3.preferences);
+ assert.deepEqual(importBackup(JSON.stringify({app:"CycleMoonBackup",schemaVersion:2,exportedAt:new Date().toISOString(),data:fixture()})),fixture());
+ assert.throws(()=>importBackup(JSON.stringify({...v3,encrypted:true})));
+ assert.throws(()=>importBackup(JSON.stringify({...v3,preferences:{}})));
+});
 test("完整备份往返保留中文、emoji、换行、记录、参数与提醒", () => {
   const data = fixture();
   data.reminders.hour = 22;

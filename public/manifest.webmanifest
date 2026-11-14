@@ -6,8 +6,8 @@
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#F8F5F1",
-  "theme_color": "#F8F5F1",
+  "background_color": "#F8F6F2",
+  "theme_color": "#F8F6F2",
   "description": "本地经期记录与日历估计",
   "icons": [
     {

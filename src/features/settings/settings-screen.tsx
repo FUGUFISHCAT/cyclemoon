@@ -1,3 +1,5 @@
+import { useDraftSave } from "@/store/use-draft-save";
+import { emptyData } from "@/domain/model";
 import { useState } from "react";
 import { Platform } from "react-native";
 import { AppText, Button, Card, Notice, Row, Screen } from "@/components/ui";
@@ -17,22 +19,26 @@ const reminderLabels: Record<ReminderKind, string> = {
   "record-check": "经期结束与记录确认",
 };
 export default function SettingsScreen() {
+  const [generation, reset] = useState(0);
+  const [result, setResult] = useState("");
   const ready = useDataStore((s) => s.ready);
   return ready ? (
-    <SettingsForm />
+    <SettingsForm key={generation} initialMessage={result} onReload={(message = "") => {setResult(message); reset(v => v + 1);}} />
   ) : (
     <Screen title="设置" subtitle="正在准备本地数据">
       <DataStatus />
     </Screen>
   );
 }
-function SettingsForm() {
+function SettingsForm({onReload, initialMessage}: {onReload: (message?: string) => void; initialMessage: string}) {
   const {
     snapshot: { data },
     ready,
     busy,
-    save,
   } = useDataStore();
+  const save = useDraftSave();
+  const [clearText, setClearText] = useState("");
+  const [icsAgain, setIcsAgain] = useState(false);
   const [cycle, setCycle] = useState(
       data.profile ? String(data.profile.cycleDays) : "",
     ),
@@ -44,7 +50,7 @@ function SettingsForm() {
     [minute, setMinute] = useState(String(data.reminders.minute)),
     [privacy, setPrivacy] = useState(data.reminders.privacy),
     [enabled, setEnabled] = useState(data.reminders.enabled);
-  const [message, setMessage] = useState(""),
+  const [message, setMessage] = useState(initialMessage),
     [pending, setPending] = useState<CycleData | null>(null),
     [confirmation, setConfirmation] = useState("");
   const [reviewedRevision, setReviewedRevision] = useState(0);
@@ -88,6 +94,8 @@ function SettingsForm() {
     }
   }
   async function prepareRestore() {
+    setPending(null);
+    setConfirmation("");
     try {
       const source = await pickBackup();
       if (source !== null) {
@@ -106,7 +114,7 @@ function SettingsForm() {
       setMessage("预览后本地数据已变化，请取消并重新选择备份");
       return;
     }
-    if (pending && (await save(pending))) {
+    if (pending && (await useDataStore.getState().save(pending, reviewedRevision))) {
       setCycle(pending.profile ? String(pending.profile.cycleDays) : "");
       setDuration(pending.profile ? String(pending.profile.periodDays) : "");
       setIrregular(pending.profile?.irregular ?? false);
@@ -116,6 +124,7 @@ function SettingsForm() {
       setEnabled(pending.reminders.enabled);
       setPending(null);
       setMessage("已原子恢复全部记录与设置。请重新生成并导入日历副本。");
+      onReload("已恢复全部记录与设置。请重新生成并导入日历副本。");
     }
   }
   function ics() {
@@ -124,6 +133,8 @@ function SettingsForm() {
         setMessage("暂无未来提醒。请先保存经期记录、周期参数和提醒开关。");
         return;
       }
+      if (icsAgain && Platform.OS === "web" && !window.confirm("你已在本次打开中导出过提醒。重复导入可能产生重复事件；已处理旧日历事件？")) return;
+      setIcsAgain(true);
       downloadText(
         "cycle-reminders-" + localToday() + ".ics",
         exportIcs(data, localToday()),
@@ -139,6 +150,7 @@ function SettingsForm() {
   return (
     <Screen title="设置" subtitle="本地保存，自己掌握。">
       <DataStatus />
+      <Button secondary title="放弃设置草稿并载入最新数据" onPress={() => onReload()} />
       {message && <Notice>{message}</Notice>}
       <Card>
         <AppText kind="heading">我的周期参数</AppText>
@@ -235,6 +247,10 @@ function SettingsForm() {
         {pending && (
           <Card tinted>
             <AppText kind="heading">恢复预览</AppText>
+            <AppText kind="caption">未加密备份；以下为校验后的内容。未来版本、无效字段或冲突区间会拒绝恢复。</AppText>
+            <Row label="周期参数" value={pending.profile ? `${pending.profile.cycleDays} 天 / 经期 ${pending.profile.periodDays} 天 / ${pending.profile.irregular ? "不太规律" : "较规律"}` : "未设置"} />
+            <Row label="经期记录范围" value={pending.periods.length ? `${pending.periods[0].start} 至 ${pending.periods.at(-1)!.start}` : "无经期记录"} />
+            <Row label="提醒时间（本地）" value={`${pending.reminders.hour.toString().padStart(2,"0")}:${pending.reminders.minute.toString().padStart(2,"0")}`} />
             <Row
               label="将恢复经期 / 身体记录"
               value={
@@ -277,9 +293,18 @@ function SettingsForm() {
           未接入广告、云同步或分析 SDK。
         </AppText>
       </Card>
+      <Card>
+        <AppText kind="heading">隐私与清除本机记录</AppText>
+        <AppText>无登录、无广告和第三方健康分析；记录只写入本机数据库。JSON 未加密，ICS 可能同步到你的日历账户。清除浏览器数据、卸载或换域名可能使记录不可用，请定期备份。</AppText>
+        <Field label="清除前请备份；输入“清除本机记录”" value={clearText} onChange={setClearText}/>
+        <Button secondary title="确认清除本机记录与设置" disabled={busy || clearText !== "清除本机记录"} onPress={() => void (async () => {
+          if (await save(emptyData())) useDataStore.getState().discardDrafts();
+        })()}/>
+        <AppText kind="caption">仅清除此站点数据库内的记录与参数，不会删除下载的备份或已导入的日历事件。</AppText>
+      </Card>
       <PwaStatus />
       <Card>
-        <Row label="版本" value="0.2.0 · PWA 本地版" />
+        <Row label="版本" value="0.3.0 · PWA 本地版" />
         <Row label="外观" value="跟随系统" />
       </Card>
     </Screen>

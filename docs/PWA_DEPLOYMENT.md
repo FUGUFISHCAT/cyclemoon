@@ -1,3 +1,5 @@
+> V0.3 当前部署包与更新策略以 RELEASE_CHECKLIST.md 和 V0.3_REPORT.md 为准。以下保留 V0.2 操作背景；V0.3 不自动删除旧外壳缓存。
+
 # Windows → 免费 HTTPS → iPhone 主屏幕
 
 本指南不要求 Apple Developer 会员，不使用 IPA，不上架 App Store。请使用自己的 Cloudflare 账户；本次未创建账户、未部署、未上传任何记录。

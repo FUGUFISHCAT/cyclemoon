@@ -1,15 +1,26 @@
-export function renderWorker(version, urls, routes) {
+export function renderWorker(version, urls, routes, integrity = {}) {
   return `/* Generated app shell only; no IndexedDB access and no runtime data caching. */
 const PREFIX='cyclemoon-shell-';
 const VERSION=${JSON.stringify(version)};
 const CACHE=PREFIX+VERSION;
 const ASSETS=${JSON.stringify(urls)};
 const ROUTES=${JSON.stringify(routes)};
+const INTEGRITY=${JSON.stringify(integrity)};
 self.addEventListener('install',event=>{
   event.waitUntil((async()=>{
     const cache=await caches.open(CACHE);
     try {
-      await cache.addAll(ASSETS.map(url=>new Request(url,{cache:'reload'})));
+      if(Object.keys(INTEGRITY).length) {
+        const responses=await Promise.all(ASSETS.map(async url=>{
+          const response=await fetch(new Request(url,{cache:'reload'}));
+          if(!response.ok)throw Error('Incomplete shell');
+          const digest=await crypto.subtle.digest('SHA-256',await response.clone().arrayBuffer());
+          const hex=Array.from(new Uint8Array(digest),v=>v.toString(16).padStart(2,'0')).join('');
+          if(hex!==INTEGRITY[url])throw Error('Shell content mismatch');
+          return [url,response];
+        }));
+        await Promise.all(responses.map(([url,response])=>cache.put(url,response)));
+      } else await cache.addAll(ASSETS.map(url=>new Request(url,{cache:'reload'})));
     } catch(error) {
       await caches.delete(CACHE);
       throw error;
@@ -27,13 +38,8 @@ self.addEventListener('activate',event=>{
 self.addEventListener('message',event=>{
   if(event.data?.type==='ACTIVATE_UPDATE')self.skipWaiting();
   if(event.data?.type==='VERSION')event.ports[0]?.postMessage({version:VERSION,cache:CACHE});
-  if(event.data?.type==='PRUNE_OLD')event.waitUntil((async()=>{
-    if(self.registration.installing || self.registration.waiting)return;
-    const windows=await self.clients.matchAll({type:'window',includeUncontrolled:true});
-    if(windows.length>1)return;
-    const keys=await caches.keys();
-    await Promise.all(keys.filter(key=>key.startsWith(PREFIX)&&key!==CACHE).map(key=>caches.delete(key)));
-  })());
+  // No automatic deletion: an old suspended client may still need its chunks.
+  // Browser eviction is possible; export backups independently of shell caches.
 });
 self.addEventListener('fetch',event=>{
   const request=event.request,url=new URL(request.url);
@@ -42,12 +48,21 @@ self.addEventListener('fetch',event=>{
   const nav=request.mode==='navigate';
   const canonical=url.pathname.replace(/\\/$/,'')||'/';
   if(nav&&!ROUTES.includes(canonical))return;
-  if(!nav&&!ASSETS.includes(url.pathname))return;
+  const oldChunk=/^\\/_expo\\/static\\/.*[-][a-f0-9]{16,}\\.(js|css)$/.test(url.pathname);
+  if(!nav&&!ASSETS.includes(url.pathname)&&!oldChunk)return;
   event.respondWith((async()=>{
     const cache=await caches.open(CACHE);
     const pathname=nav?(canonical==='/'?'/index.html':canonical+'.html'):url.pathname;
     const cached=await cache.match(pathname);
     if(cached)return cached;
+    if(oldChunk) {
+      for(const key of await caches.keys()) {
+        if(key.startsWith(PREFIX)&&key!==CACHE) {
+          const old=await (await caches.open(key)).match(url.pathname);
+          if(old)return old;
+        }
+      }
+    }
     // Missing cache entries are fetched but never persist dynamic responses.
     try{return await fetch(request);}catch{return new Response('离线外壳不完整，请联网重新打开月相。',{status:503,headers:{'Content-Type':'text/plain;charset=utf-8'}});}
   })());

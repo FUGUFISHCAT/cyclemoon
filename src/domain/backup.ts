@@ -134,11 +134,16 @@ export function decodeSnapshot(raw: unknown): Snapshot {
   };
 }
 export function exportBackup(data: CycleData, now = new Date()): string {
+  const validated = validateData(data);
   return JSON.stringify({
     app: "CycleMoonBackup",
-    schemaVersion: 2,
+    schemaVersion: 3,
+    appVersion: "0.3.0",
     exportedAt: now.toISOString(),
-    data: validateData(data),
+    encrypted: false,
+    cycleRecords: validated.periods,
+    dailyLogs: validated.entries,
+    preferences: { profile: validated.profile, reminders: validated.reminders },
   });
 }
 export function importBackup(source: string): CycleData {
@@ -147,7 +152,7 @@ export function importBackup(source: string): CycleData {
   const v = object(JSON.parse(source));
   if (
     v.app !== "CycleMoonBackup" ||
-    (v.schemaVersion !== 1 && v.schemaVersion !== 2)
+    (v.schemaVersion !== 1 && v.schemaVersion !== 2 && v.schemaVersion !== 3)
   )
     throw new Error("不是支持的月相备份或版本过新");
   if (
@@ -155,6 +160,12 @@ export function importBackup(source: string): CycleData {
     !Number.isFinite(Date.parse(v.exportedAt))
   )
     throw new Error("备份时间无效");
+  if (v.schemaVersion === 3) {
+    if (v.encrypted !== false || typeof v.appVersion !== "string" || !/^\d+\.\d+\.\d+$/.test(v.appVersion))
+      throw new Error("备份版本或加密标记无效；当前仅支持未加密备份");
+    const p = object(v.preferences);
+    return validateData({ periods: v.cycleRecords, entries: v.dailyLogs, profile: p.profile, reminders: p.reminders });
+  }
   return decodeSnapshot({
     schemaVersion: v.schemaVersion,
     revision: 0,

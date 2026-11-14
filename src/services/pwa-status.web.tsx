@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { AppText, Button, Card } from "@/components/ui";
 type PwaInfo = { status: string; waiting: boolean };
 export function PwaStatus() {
+  const [confirmUpdate, setConfirmUpdate] = useState(false);
   const [info, setInfo] = useState<PwaInfo>({
       status: "等待离线状态检查",
       waiting: false,
@@ -49,7 +50,8 @@ export function PwaStatus() {
             先保存当前编辑并导出备份，再应用更新。更新只更换应用文件，不清除
             IndexedDB。
           </AppText>
-          <Button title="已保存，应用更新并重新加载" onPress={update} />
+          <Button title="准备应用更新" onPress={() => setConfirmUpdate(true)} />
+          {confirmUpdate && <><AppText>请确认草稿已保存、备份已下载。更新将重新加载。</AppText><Button title="已保存，应用更新并重新加载" onPress={update} /><Button secondary title="稍后更新" onPress={() => setConfirmUpdate(false)} /></>}
         </>
       )}
       <Button

@@ -15,6 +15,7 @@ const tabs = [
   { name: "settings", title: "设置", icon: "⚙" },
 ] as const;
 export default function RootLayout() {
+  const privacyEpoch = useDataStore((s) => s.privacyEpoch);
   const { colors, dark } = useTheme();
   useEffect(() => {
     void useDataStore.getState().load();
@@ -40,6 +41,7 @@ export default function RootLayout() {
     <>
       <StatusBar style={dark ? "light" : "dark"} />
       <Tabs
+        key={privacyEpoch}
         safeAreaInsets={
           Platform.OS === "web"
             ? { top: 0, right: 0, bottom: 0, left: 0 }
@@ -51,6 +53,7 @@ export default function RootLayout() {
           tabBarInactiveTintColor: colors.muted,
           sceneStyle: { backgroundColor: colors.background },
           tabBarStyle: {
+            minHeight: 60,
             backgroundColor: colors.surface,
             borderTopColor: colors.border,
           },

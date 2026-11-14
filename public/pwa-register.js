@@ -1,5 +1,15 @@
 /* Static registration only. Never reads health data. */
 (() => {
+  const resize = () => {
+    document.documentElement.style.setProperty("--app-height", (window.visualViewport?.height ?? window.innerHeight) + "px");
+    const field = document.activeElement;
+    if (field && /^(INPUT|TEXTAREA)$/.test(field.tagName)) field.scrollIntoView({block:"nearest"});
+  };
+  window.visualViewport?.addEventListener("resize", resize);
+  window.addEventListener("resize", resize);
+  window.addEventListener("load", resize);
+})();
+(() => {
   const info = { status: "正在检查离线支持…", waiting: false };
   let registration,
     refreshing = false;
@@ -11,7 +21,6 @@
     info,
     applyUpdate: () => {
       if (!registration?.waiting) return;
-      if (!window.confirm("已保存编辑并备份？应用更新将重新加载页面。")) return;
       window.cyclePwa.updating = true;
       registration.waiting.postMessage({ type: "ACTIVATE_UPDATE" });
     },
@@ -21,6 +30,8 @@
     return;
   }
   navigator.serviceWorker.addEventListener("controllerchange", () => {
+    info.waiting = false;
+    if (!window.cyclePwa.updating) publish("新外壳已启用；保存草稿后重新打开可使用最新界面");
     if (!refreshing && window.cyclePwa.updating) {
       refreshing = true;
       location.reload();
@@ -32,13 +43,14 @@
   };
   window.addEventListener("load", async () => {
     try {
-      const response = await fetch("/pwa-version.json", { cache: "no-store" });
-      if (!response.ok) {
+      const existing = await navigator.serviceWorker.getRegistration("/");
+      const response = await fetch("/pwa-version.json", { cache: "no-store" }).catch(() => null);
+      if (!existing && !response?.ok) {
         publish("开发模式：离线缓存未启用，请运行静态构建预览");
         return;
       }
-      const version = await response.json();
-      registration = await navigator.serviceWorker.register("/sw.js", {
+      const version = response?.ok ? await response.json() : {version: "已缓存版本"};
+      registration = existing ?? await navigator.serviceWorker.register("/sw.js", {
         scope: "/",
         updateViaCache: "none",
       });
@@ -56,12 +68,7 @@
       });
       if (registration.active && !registration.waiting)
         publish("离线外壳已就绪（已有缓存，正在检查更新）");
-      if (
-        navigator.serviceWorker.controller &&
-        !registration.waiting &&
-        !registration.installing
-      )
-        navigator.serviceWorker.controller.postMessage({ type: "PRUNE_OLD" });
+      void registration.update().catch(() => {});
       setInterval(
         () => {
           void registration.update().catch(() => {});

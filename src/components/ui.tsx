@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Text,
   View,
+  KeyboardAvoidingView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { radius, space, useTheme } from "@/theme/tokens";
@@ -32,15 +33,18 @@ export function Screen({
   title,
   subtitle,
   children,
-}: PropsWithChildren<{ title: string; subtitle: string }>) {
+  compact = false,
+}: PropsWithChildren<{ title: string; subtitle: string; compact?: boolean }>) {
   const { colors } = useTheme();
   return (
     <SafeAreaView
       edges={Platform.OS === "web" ? [] : ["top", "left", "right"]}
       style={{ flex: 1, backgroundColor: colors.background }}
     >
+      <KeyboardAvoidingView style={{flex: 1}} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <ScrollView
-        contentContainerStyle={styles.screen}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={[styles.screen, compact && {paddingHorizontal: 4}]}
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.header}>
@@ -50,21 +54,24 @@ export function Screen({
         </View>
         {children}
       </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 export function Card({
   children,
   tinted = false,
-}: PropsWithChildren<{ tinted?: boolean }>) {
+  compact = false,
+}: PropsWithChildren<{ tinted?: boolean; compact?: boolean }>) {
   const { colors } = useTheme();
   return (
     <View
       style={[
         styles.card,
+        compact && {paddingHorizontal: 1, gap: 8},
         {
           backgroundColor: tinted ? colors.tint : colors.surface,
-          borderColor: colors.border,
+          borderColor: tinted ? colors.accent : colors.border,
         },
       ]}
     >
@@ -131,8 +138,8 @@ export function Notice({ children }: PropsWithChildren) {
 }
 const styles = StyleSheet.create({
   screen: {
-    padding: space.lg,
-    paddingBottom: 40,
+    padding: space.md,
+    paddingBottom: 48,
     gap: space.md,
     width: "100%",
     maxWidth: 600,
@@ -140,7 +147,7 @@ const styles = StyleSheet.create({
   },
   header: { gap: space.sm, paddingVertical: space.md },
   card: {
-    padding: space.lg,
+    padding: space.md,
     borderRadius: radius.card,
     borderWidth: 1,
     gap: space.md,
@@ -152,6 +159,7 @@ const styles = StyleSheet.create({
   hero: { fontSize: 48, fontWeight: "300", lineHeight: 60 },
   button: {
     minHeight: 48,
+    minWidth: 44,
     borderWidth: 1,
     borderRadius: radius.sm,
     padding: space.md,

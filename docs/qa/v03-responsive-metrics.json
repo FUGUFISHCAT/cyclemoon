@@ -1,0 +1,142 @@
+[
+  {
+    "documentWidth": 320,
+    "minControlHeight": 44,
+    "minControlWidth": 44,
+    "page": "首页",
+    "width": 320
+  },
+  {
+    "documentWidth": 375,
+    "minControlHeight": 44,
+    "minControlWidth": 44,
+    "page": "首页",
+    "width": 375
+  },
+  {
+    "documentWidth": 390,
+    "minControlHeight": 44,
+    "minControlWidth": 44,
+    "page": "首页",
+    "width": 390
+  },
+  {
+    "documentWidth": 430,
+    "minControlHeight": 44,
+    "minControlWidth": 44,
+    "page": "首页",
+    "width": 430
+  },
+  {
+    "documentWidth": 320,
+    "minControlHeight": 44,
+    "minControlWidth": 44,
+    "page": "日历",
+    "width": 320
+  },
+  {
+    "documentWidth": 375,
+    "minControlHeight": 44,
+    "minControlWidth": 44,
+    "page": "日历",
+    "width": 375
+  },
+  {
+    "documentWidth": 390,
+    "minControlHeight": 44,
+    "minControlWidth": 44,
+    "page": "日历",
+    "width": 390
+  },
+  {
+    "documentWidth": 430,
+    "minControlHeight": 44,
+    "minControlWidth": 44,
+    "page": "日历",
+    "width": 430
+  },
+  {
+    "documentWidth": 320,
+    "minControlHeight": 44,
+    "minControlWidth": 44,
+    "page": "记录",
+    "width": 320
+  },
+  {
+    "documentWidth": 375,
+    "minControlHeight": 44,
+    "minControlWidth": 44,
+    "page": "记录",
+    "width": 375
+  },
+  {
+    "documentWidth": 390,
+    "minControlHeight": 44,
+    "minControlWidth": 44,
+    "page": "记录",
+    "width": 390
+  },
+  {
+    "documentWidth": 430,
+    "minControlHeight": 44,
+    "minControlWidth": 44,
+    "page": "记录",
+    "width": 430
+  },
+  {
+    "documentWidth": 320,
+    "minControlHeight": 44,
+    "minControlWidth": 44,
+    "page": "洞察",
+    "width": 320
+  },
+  {
+    "documentWidth": 375,
+    "minControlHeight": 44,
+    "minControlWidth": 44,
+    "page": "洞察",
+    "width": 375
+  },
+  {
+    "documentWidth": 390,
+    "minControlHeight": 44,
+    "minControlWidth": 44,
+    "page": "洞察",
+    "width": 390
+  },
+  {
+    "documentWidth": 430,
+    "minControlHeight": 44,
+    "minControlWidth": 44,
+    "page": "洞察",
+    "width": 430
+  },
+  {
+    "documentWidth": 320,
+    "minControlHeight": 44,
+    "minControlWidth": 44,
+    "page": "设置",
+    "width": 320
+  },
+  {
+    "documentWidth": 375,
+    "minControlHeight": 44,
+    "minControlWidth": 44,
+    "page": "设置",
+    "width": 375
+  },
+  {
+    "documentWidth": 390,
+    "minControlHeight": 44,
+    "minControlWidth": 44,
+    "page": "设置",
+    "width": 390
+  },
+  {
+    "documentWidth": 430,
+    "minControlHeight": 44,
+    "minControlWidth": 44,
+    "page": "设置",
+    "width": 430
+  }
+]

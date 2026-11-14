@@ -1,5 +1,5 @@
 import type { CycleData, ReminderKind } from "./model.ts";
-import { addDays } from "./dates.ts";
+import { addDays, isDateKey } from "./dates.ts";
 import { predict } from "./prediction.ts";
 
 export type Reminder = {
@@ -12,7 +12,7 @@ export function planReminders(data: CycleData, today: string): Reminder[] {
   const p = predict(data, today);
   const result: Reminder[] = [];
   const add = (kind: ReminderKind, date: string, title: string, id: string) => {
-    if (data.reminders.enabled[kind] && date >= today)
+    if (data.reminders.enabled[kind] && isDateKey(date) && date >= today)
       result.push({
         kind,
         date,

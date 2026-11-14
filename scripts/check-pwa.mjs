@@ -12,6 +12,9 @@ const apple = await readFile(path.join(root, "icons/apple-touch-icon.png"));
 assert.equal(apple.readUInt32BE(16), 180);
 assert.equal(apple.readUInt32BE(20), 180);
 const sw = await readFile(path.join(root, "sw.js"), "utf8");
+assert.ok(!/indexedDB\s*\.|deleteDatabase\s*\(/.test(sw), "worker must not access health database");
+const headers = await readFile(path.join(root, "_headers"), "utf8");
+assert.match(headers, /Content-Security-Policy:.*connect-src 'self'/);
 const urls = JSON.parse(sw.match(/const ASSETS=(\[[^\n]+\]);/)[1]);
 for (const url of urls) {
   assert.ok(

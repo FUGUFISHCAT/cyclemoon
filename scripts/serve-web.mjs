@@ -1,7 +1,7 @@
 import http from "node:http";
 import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
-const root = path.resolve("dist"),
+const root = path.resolve(process.env.WEB_ROOT ?? "dist"),
   port = Number(process.env.PORT ?? 4173);
 const types = {
   ".html": "text/html;charset=utf-8",
@@ -39,7 +39,15 @@ const server = http.createServer(async (req, res) => {
       if (!path.extname(file)) file += ".html";
     }
     const content = await readFile(file);
+    const sharedHeaders = {};
+    const config = await readFile(path.join(root, "_headers"), "utf8").catch(() => "");
+    for (const line of config.split(/\r?\n/).slice(1)) {
+      if (!/^\s/.test(line)) break;
+      const colon = line.indexOf(":");
+      if (colon > 0) sharedHeaders[line.slice(0, colon).trim()] = line.slice(colon + 1).trim();
+    }
     res.writeHead(200, {
+      ...sharedHeaders,
       "Content-Type": types[path.extname(file)] ?? "application/octet-stream",
       "Cache-Control": "no-store",
       "X-Content-Type-Options": "nosniff",

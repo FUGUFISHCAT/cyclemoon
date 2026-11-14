@@ -14,8 +14,12 @@ export function createIndexedRepository(
     return new Promise((resolve, reject) => {
       const request = factory.open(name, DB_VERSION);
       let abandoned = false;
-      request.onupgradeneeded = () => {
+      request.onupgradeneeded = (event) => {
         // Additive migration only. Never delete a store or recreate the database.
+        if (!request.result.objectStoreNames.contains("state") && event.oldVersion !== 0) {
+          request.transaction?.abort();
+          return;
+        }
         if (!request.result.objectStoreNames.contains("state"))
           request.result.createObjectStore("state");
       };
@@ -39,6 +43,11 @@ export function createIndexedRepository(
           return;
         }
         request.result.onversionchange = () => request.result.close();
+        if (!request.result.objectStoreNames.contains("state")) {
+          request.result.close();
+          reject(new Error("本地数据库结构不兼容；已保留原数据，请使用兼容版本。"));
+          return;
+        }
         resolve(request.result);
       };
     });

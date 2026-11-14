@@ -29,8 +29,8 @@ export default function InsightsScreen() {
               value={p.ovulationFrom + " 至 " + p.ovulationTo}
             />
             <AppText kind="caption">
-              {p.basis}。排卵附近仅按中心估计前 18–12
-              天粗略展示，不表示实际发生排卵。
+              {p.basis}。排卵附近按经验日期范围前 18–12
+              天粗略展示，已随不确定性扩大，不表示检测到实际排卵，不能作为可靠避孕依据。
             </AppText>
             <Row label="排除的异常间隔" value={String(p.excluded)} />
           </>

@@ -28,7 +28,7 @@ if (!files.some((p) => path.relative(root, p) === "index.html"))
   throw Error("Missing index.html");
 if (
   files.some((p) =>
-    /backup|\.ics$|\.sqlite|\.db$|\.env|test-results|qa-fixture/i.test(
+    /backup|\.ics$|\.sqlite|\.db$|\.env|\.(pem|key|p12|pfx|keystore)$|test-results|qa-fixture/i.test(
       path.relative(root, p),
     ),
   )
@@ -38,17 +38,37 @@ const urls = files.map(
   (p) => "/" + path.relative(root, p).replaceAll(path.sep, "/"),
 );
 const hash = createHash("sha256");
+hash.update(renderWorker.toString());
+const baseHeaders = (await readFile("public/_headers", "utf8")).replaceAll("\r\n", "\n");
+hash.update(baseHeaders);
+const inlineHashes = new Set();
+const integrity = {};
 for (const file of files) {
   hash.update(path.relative(root, file));
   hash.update(await readFile(file));
+  const bytes = await readFile(file);
+  if (/-----BEGIN (?:[A-Z ]+ )?PRIVATE KEY-----/.test(bytes.toString("utf8"))) throw Error("Private key found in static output");
+  integrity["/" + path.relative(root, file).replaceAll(path.sep, "/")] = createHash("sha256").update(bytes).digest("hex");
+  if (file.endsWith(".json")) {
+    const content = JSON.parse(bytes.toString("utf8"));
+    if (content.app === "CycleMoonBackup" || content.cycleRecords || content.dailyLogs || content.data?.periods || content.data?.entries)
+      throw Error("Health backup/data artifact found in static output");
+  }
+  if (file.endsWith(".html")) {
+    for (const script of bytes.toString("utf8").matchAll(/<script([^>]*)>([\s\S]*?)<\/script>/g)) {
+      if (script[2] && !/\bsrc=/.test(script[1])) inlineHashes.add("'sha256-" + createHash("sha256").update(script[2]).digest("base64") + "'");
+    }
+  }
 }
 const version = hash.digest("hex").slice(0, 16);
 const routes = ["/", "/calendar", "/record", "/insights", "/settings"];
-const worker = renderWorker(version, urls, routes);
+const worker = renderWorker(version, urls, routes, integrity);
 await writeFile(path.join(root, "sw.js"), worker);
+const policy = `default-src 'self'; script-src 'self' ${[...inlineHashes].join(" ")}; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'`;
+await writeFile(path.join(root, "_headers"), baseHeaders.replace("/*\n", "/*\n  Content-Security-Policy: " + policy + "\n"));
 await writeFile(
   path.join(root, "pwa-version.json"),
-  JSON.stringify({ version }),
+  JSON.stringify({ appVersion: "0.3.0", version }),
 );
 console.log(
   "PWA shell " +

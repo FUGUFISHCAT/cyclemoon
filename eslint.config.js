@@ -9,6 +9,7 @@ module.exports = defineConfig([
       "dist/**",
       "dist-android/**",
       "dist-ios/**",
+      "artifacts/**",
       ".incomplete-node-modules*/**",
       "cycle/**",
     ],

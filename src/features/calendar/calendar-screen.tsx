@@ -37,9 +37,9 @@ export default function CalendarScreen() {
   const selectedEntry = data.entries.find((e) => e.date === selected);
   const cells = buildMonth(year, month);
   return (
-    <Screen title="日历" subtitle="每一天，都可以被好好记住。">
+    <Screen compact title="日历" subtitle="每一天，都可以被好好记住。">
       <DataStatus />
-      <Card>
+      <Card compact>
         <View
           style={{
             flexDirection: "row",

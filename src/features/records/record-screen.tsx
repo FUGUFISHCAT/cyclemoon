@@ -1,3 +1,5 @@
+import { Sheet } from "@/components/sheet";
+import { useDraftSave } from "@/store/use-draft-save";
 import { useState } from "react";
 import { useSessionStore } from "@/store/use-session-store";
 import { AppText, Button, Card, Notice, Screen } from "@/components/ui";
@@ -20,6 +22,7 @@ const levelOptions = [
   { value: "3", label: "重" },
 ];
 export default function RecordScreen() {
+  const [generation, reset] = useState(0);
   const queryDate = useSessionStore((s) => s.selectedDate);
   const ready = useDataStore((s) => s.ready);
   if (!ready)
@@ -29,15 +32,16 @@ export default function RecordScreen() {
       </Screen>
     );
   const date = isDateKey(queryDate) ? queryDate : localToday();
-  return <RecordForm key={date} initialDate={date} />;
+  return <RecordForm key={date + generation} initialDate={date} onReload={() => reset(v => v + 1)} />;
 }
-function RecordForm({ initialDate }: { initialDate: string }) {
+function RecordForm({ initialDate, onReload }: { initialDate: string; onReload: () => void }) {
   const {
     snapshot: { data },
     ready,
     busy,
-    save,
   } = useDataStore();
+  const save = useDraftSave();
+  const [sheet, setSheet] = useState<"period" | "body" | null>(null);
   const initial = data.entries.find((e) => e.date === initialDate);
   const [start, setStart] = useState(initialDate),
     [end, setEnd] = useState(""),
@@ -86,6 +90,7 @@ function RecordForm({ initialDate }: { initialDate: string }) {
         setFeedback("经期已保存到此设备");
         setEditing(null);
         setEnd("");
+        setSheet(null);
       }
     } catch (e) {
       setFeedback(e instanceof Error ? e.message : "保存失败");
@@ -110,8 +115,10 @@ function RecordForm({ initialDate }: { initialDate: string }) {
           ...data,
           entries: [...data.entries.filter((e) => e.date !== entryDate), entry],
         })
-      )
+      ) {
         setFeedback("身体记录已保存到此设备");
+        setSheet(null);
+      }
     } catch (e) {
       setFeedback(e instanceof Error ? e.message : "保存失败");
     }
@@ -133,13 +140,20 @@ function RecordForm({ initialDate }: { initialDate: string }) {
   return (
     <Screen title="记录" subtitle="只存于此设备，离线也能记下今天。">
       <DataStatus />
+      <Button secondary title="放弃草稿并载入最新记录" onPress={onReload} />
       {feedback && <Notice>{feedback}</Notice>}
+      <Button title="记经期开始 / 编辑日期" disabled={busy} onPress={() => setSheet("period")} />
+      <Button secondary title="记身体与心情" disabled={busy} onPress={() => setSheet("body")} />
+      <Sheet visible={sheet === "period"} onClose={() => setSheet(null)}>
+      <DataStatus />{feedback && <Notice>{feedback}</Notice>}
       <Card>
         <AppText kind="heading">
           {editing ? "编辑经期" : "记录一次经期"}
         </AppText>
-        <Field label="开始日期 YYYY-MM-DD" value={start} onChange={setStart} />
+        {!editing && <Button secondary title="使用今天作为开始日" onPress={() => setStart(localToday())} />}
+        <Field dateInput label="开始日期 YYYY-MM-DD" value={start} onChange={setStart} />
         <Field
+          dateInput
           label="结束日期 YYYY-MM-DD（进行中请留空）"
           value={end}
           onChange={setEnd}
@@ -161,9 +175,13 @@ function RecordForm({ initialDate }: { initialDate: string }) {
           />
         )}
       </Card>
+      </Sheet>
+      <Sheet visible={sheet === "body"} onClose={() => setSheet(null)}>
+      <DataStatus />{feedback && <Notice>{feedback}</Notice>}
       <Card>
         <AppText kind="heading">身体与心情</AppText>
         <Field
+          dateInput
           label="身体记录日期 YYYY-MM-DD"
           value={entryDate}
           onChange={setEntryDate}
@@ -209,6 +227,7 @@ function RecordForm({ initialDate }: { initialDate: string }) {
           onPress={() => void saveEntry()}
         />
       </Card>
+      </Sheet>
       {deleting && (
         <Card tinted>
           <AppText>确认永久删除这条记录？建议先在设置导出备份。</AppText>
@@ -240,7 +259,7 @@ function RecordForm({ initialDate }: { initialDate: string }) {
                 setEditing(p.id);
                 setStart(p.start);
                 setEnd(p.end ?? "");
-                setFeedback("已载入经期，请在上方修改");
+                setSheet("period");
               }}
             />
             <Button
@@ -270,7 +289,7 @@ function RecordForm({ initialDate }: { initialDate: string }) {
                 title={"编辑 " + e.date + " 身体记录"}
                 onPress={() => {
                   loadEntry(e.date);
-                  setFeedback("已载入身体记录，请在上方修改");
+                  setSheet("body");
                 }}
               />
               <Button

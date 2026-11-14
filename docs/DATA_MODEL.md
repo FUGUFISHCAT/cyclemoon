@@ -30,3 +30,6 @@ IDB onupgradeneeded 仅在不存在时创建 state，从不 deleteObjectStore / 
 
 CycleRepository 接口 load / commit 为平台边界；repository.native.ts 是明确抛错的 SQLite 预留，不能保存。未来 SQLite 用数据表或版本化快照实现同一协议，并在事务内迁移 / 校验，不直接读取 Safari 沙箱。
 加密尚未实现；不以开关代替密钥管理。未来 SQLCipher / 系统安全存储需要原生构建与迁移验证。PWA 到原生通过用户导出的同一 JSON，离线导入，见 ARCHITECTURE。
+
+## V0.3 备份协议补充
+内部 IndexedDB / Snapshot 保持版本 2。导出备份升级为 schemaVersion 3，含 appVersion、exportedAt、encrypted:false、cycleRecords、dailyLogs、preferences；兼容读取 v1/v2 备份。未加密，未来版本拒绝，不静默清空。详见 SECURITY.md。

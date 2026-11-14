@@ -1,3 +1,4 @@
+import { palettes } from "@/theme/palettes";
 import type { PropsWithChildren } from "react";
 import {
   ScrollViewStyleReset,
@@ -17,7 +18,7 @@ export default function Root({ children }: PropsWithChildren) {
           name="viewport"
           content="width=device-width, initial-scale=1, viewport-fit=cover"
         />
-        <meta name="theme-color" content="#F8F5F1" />
+        <meta name="theme-color" content={palettes.light.background} />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-title" content="月相" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -35,7 +36,7 @@ export default function Root({ children }: PropsWithChildren) {
         <style
           dangerouslySetInnerHTML={{
             __html:
-              "html,body,#root{height:100%;min-height:100%;background:#F8F5F1}body{overscroll-behavior-y:none}#root{padding-top:env(safe-area-inset-top);padding-right:env(safe-area-inset-right);padding-bottom:env(safe-area-inset-bottom);padding-left:env(safe-area-inset-left);box-sizing:border-box}input,textarea{font-size:16px!important}*:focus-visible{outline:2px solid #925266;outline-offset:2px}@media(prefers-color-scheme:dark){html,body,#root{background:#1D191C}}",
+              `html,body,#root{height:100%;min-height:0;background:${palettes.light.background}}body{overscroll-behavior-y:none}#root{height:var(--app-height,100%);padding-top:env(safe-area-inset-top);padding-right:env(safe-area-inset-right);padding-bottom:env(safe-area-inset-bottom);padding-left:env(safe-area-inset-left);box-sizing:border-box}#cycle-record-sheet{height:var(--app-height,100dvh);max-height:var(--app-height,100dvh);padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right);box-sizing:border-box}input,textarea{font-size:16px!important}*:focus-visible{outline:2px solid ${palettes.light.primary};outline-offset:2px}@media(prefers-color-scheme:dark){html,body,#root{background:${palettes.dark.background}}}`,
           }}
         />
         <script defer src="/pwa-register.js" />
