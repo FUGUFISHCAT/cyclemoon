@@ -19,3 +19,7 @@
 ## 0.2.0 — 历史版本
 
 Expo / React Native Web、IndexedDB、五页、周期估计、JSON 备份恢复、ICS、PWA 离线外壳与静态部署包。历史结果保留在 PWA_REPORT.md；不作为本轮验收证据。
+
+## V0.3 生产启动与日期输入修复 — 2026-11-15
+
+修复跨日静态 HTML hydration 错误和 Web 日期 input 未同步草稿的问题。41 项测试及生产构建通过。新内容版本 e4a5a6a35c2ac434，详情见 V0.3_SETTINGS_FIX.md；线上受网络限制未验收。

@@ -26,6 +26,8 @@ for (const url of urls) {
 for (const route of ["index", "calendar", "record", "insights", "settings"]) {
   const html = await readFile(path.join(root, route + ".html"), "utf8");
   assert.match(html, /viewport-fit=cover/);
+  assert.match(html, /正在启动月相/);
+  assert.doesNotMatch(html, /\b20\d{2}-\d{2}-\d{2}\b/, "Static shell must not freeze build-day dates before hydration");
   assert.match(html, /manifest.webmanifest/);
   assert.match(html, /<script[^>]+src=["'][^"']*_expo\/static\/js\/web\//);
   assert.ok(

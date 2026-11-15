@@ -21,7 +21,7 @@ export function Field({
   return (
     <View style={{ gap: 6 }}>
       <AppText kind="caption">{label}</AppText>
-      {dateInput && Platform.OS === "web" ? <input type="date" aria-label={label} value={value} min="1900-01-01" max={localToday()} onChange={e => onChange(e.target.value)} style={{width:"100%",minWidth:0,boxSizing:"border-box",border:`1px solid ${colors.border}`,borderRadius:12,padding:14,minHeight:48,color:colors.text,backgroundColor:colors.background,fontSize:16}} /> : <TextInput
+      {dateInput && Platform.OS === "web" ? <input type="date" aria-label={label} value={value} min="1900-01-01" max={localToday()} onInput={e => onChange(e.currentTarget.value)} onChange={e => onChange(e.target.value)} style={{width:"100%",minWidth:0,boxSizing:"border-box",border:`1px solid ${colors.border}`,borderRadius:12,padding:14,minHeight:48,color:colors.text,backgroundColor:colors.background,fontSize:16}} /> : <TextInput
         accessibilityLabel={label}
         value={value}
         onChangeText={onChange}
