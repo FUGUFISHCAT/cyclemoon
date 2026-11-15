@@ -28,13 +28,21 @@ const version=JSON.parse(await readFile("dist/pwa-version.json","utf8"));
 assert.match(version.version,/^[a-f0-9]{16}$/);
 assert.equal(version.appVersion,"0.3.0");
 await mkdir("artifacts",{recursive:true});
-const zip=path.resolve(`artifacts/cyclemoon-pwa-0.3.0-${version.version}.zip`);
+const zip=path.resolve(`artifacts/cyclemoon-pwa-0.3.0-${version.version}-workers.zip`);
 const quote=value=>"'"+value.replaceAll("'","''")+"'";
 const script=`$ErrorActionPreference='Stop'
 [Console]::OutputEncoding=[System.Text.UTF8Encoding]::new($false)
 Add-Type -AssemblyName System.IO.Compression.FileSystem
+Add-Type -AssemblyName System.IO.Compression
 if (-not (Test-Path -LiteralPath ${quote(zip)})) {
- [System.IO.Compression.ZipFile]::CreateFromDirectory(${quote(root)},${quote(zip)},[System.IO.Compression.CompressionLevel]::Optimal,$false)
+ $created=[System.IO.Compression.ZipFile]::Open(${quote(zip)},[System.IO.Compression.ZipArchiveMode]::Create)
+ try {
+  $base=${quote(root)}
+  foreach($file in [System.IO.Directory]::GetFiles($base,'*',[System.IO.SearchOption]::AllDirectories)) {
+   $relative=$file.Substring($base.Length+1).Replace('\\','/')
+   [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($created,$file,$relative,[System.IO.Compression.CompressionLevel]::Optimal) | Out-Null
+  }
+ } finally { $created.Dispose() }
 }
 $archive=[System.IO.Compression.ZipFile]::OpenRead(${quote(zip)})
 try {
@@ -42,7 +50,8 @@ try {
  foreach($entry in $archive.Entries) {
   if ($entry.FullName.EndsWith('/')) { continue }
   $stream=$entry.Open(); $sha=[System.Security.Cryptography.SHA256]::Create()
-  try { $result[$entry.FullName.Replace('\\','/')]=([BitConverter]::ToString($sha.ComputeHash($stream))).Replace('-','').ToLowerInvariant() }
+  try { if ($entry.FullName.Contains('\\') -or $entry.FullName.StartsWith('/') -or $entry.FullName.Contains('../')) { throw 'Unsafe ZIP path' }
+  $result[$entry.FullName]=([BitConverter]::ToString($sha.ComputeHash($stream))).Replace('-','').ToLowerInvariant() }
   finally { $sha.Dispose(); $stream.Dispose() }
  }
  $result | ConvertTo-Json -Compress

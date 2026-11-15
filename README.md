@@ -1,5 +1,7 @@
 # 月相 Cycle / CycleMoon
 
+> 2026-11-15 最新：Windows ZIP 子目录路径已修复，请使用 artifacts/cyclemoon-pwa-0.3.0-930729e04885e306-workers.zip。原无 -workers 后缀包已知有打包路径问题，不再用于部署。[Workers 修复与上传步骤](docs/WORKERS_DEPLOYMENT_FIX.md)。
+
 Expo SDK 58 + React Native + TypeScript 工程，当前版本 0.3.0。Windows 可开发；静态 PWA 可用 iPhone Safari 添加到主屏幕，无需购买 Apple Developer 会员或安装 IPA。本项目没有自动部署。
 
 ## 快速运行

@@ -23,3 +23,7 @@ Expo / React Native Web、IndexedDB、五页、周期估计、JSON 备份恢复�
 ## V0.3 生产启动与日期输入修复 — 2026-11-15
 
 修复跨日静态 HTML hydration 错误和 Web 日期 input 未同步草稿的问题。41 项测试及生产构建通过。新内容版本 e4a5a6a35c2ac434，详情见 V0.3_SETTINGS_FIX.md；线上受网络限制未验收。
+
+## Workers ZIP 路径修复 — 2026-11-15
+
+修复 Windows .NET Framework 打包子目录使用反斜杠、原校验归一化掩盖问题的缺陷；新 ZIP 原始条目只允许标准相对路径。新增 52 个 URL 的 HTTP/MIME/图标校验和 Workers 部署配置。当前使用带 -workers 后缀的 ZIP；详见 WORKERS_DEPLOYMENT_FIX.md，未自动部署。
