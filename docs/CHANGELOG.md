@@ -27,3 +27,7 @@ Expo / React Native Web、IndexedDB、五页、周期估计、JSON 备份恢复�
 ## Workers ZIP 路径修复 — 2026-11-15
 
 修复 Windows .NET Framework 打包子目录使用反斜杠、原校验归一化掩盖问题的缺陷；新 ZIP 原始条目只允许标准相对路径。新增 52 个 URL 的 HTTP/MIME/图标校验和 Workers 部署配置。当前使用带 -workers 后缀的 ZIP；详见 WORKERS_DEPLOYMENT_FIX.md，未自动部署。
+
+## 0.3.1 — 2026-11-16
+
+超过14天的开放经期核对、未知结束待确认、确认后开始新经期；排除异常经期时长；数据库v3保留旧记录并阻止旧客户端降级。JSON/ICS文件分享优先、取消与下载回退；设置页浏览器/域名迁移说明。补充静态目录路由、CloudBase评估及迁移指南。48项测试通过；未部署，iPhone真机未验证。V0.4需求仅登记。

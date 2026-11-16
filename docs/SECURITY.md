@@ -38,3 +38,6 @@ ICS 默认隐私标题仍含敏感时间信息，导入后可能同步至用户�
 原生迁移通过本机 JSON 导入：未来实现原生安全存储后复用 validateData / importBackup 和 Repository，先验证整份数据再在 SQLite 事务中提交；核对记录和提醒后由用户决定是否清理旧 PWA。未来加密应增加真正的密钥管理 / 认证加密与迁移方案，不使用编码或隐藏界面冒充加密。
 
 依据：[IndexedDB 事务](https://developer.mozilla.org/en-US/docs/Web/API/IDBTransaction/complete_event)、[持久存储](https://developer.mozilla.org/en-US/docs/Web/API/StorageManager/persist)、[Cloudflare 静态响应头](https://developers.cloudflare.com/pages/configuration/headers/)。
+
+## V0.3.1 补充
+文件分享仅在用户发起导出时调用系统分享，由用户选接收位置；AbortError 取消不报告成功，也不自动下载。JSON/ICS没有加密，不要选择不信任的接收者。数据库v3防止旧客户端忽略结束日期待确认状态；未发送云端健康记录。

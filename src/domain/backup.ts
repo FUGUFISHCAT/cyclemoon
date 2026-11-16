@@ -65,14 +65,16 @@ export function validateData(raw: unknown): CycleData {
           dayNumber(end) - dayNumber(start) > 60)
       )
         throw new Error("经期结束日期或跨度无效");
-      return { id, start, end };
+      if (p.endPending !== undefined && p.endPending !== true) throw new Error("待确认标记无效");
+      if (p.endPending && end !== null) throw new Error("待确认结束日期必须留空");
+      return { id, start, end, ...(p.endPending ? {endPending: true as const} : {}) };
     })
     .sort((a, b) => a.start.localeCompare(b.start));
   if (new Set(periods.map((p) => p.id)).size !== periods.length)
     throw new Error("经期 ID 重复");
   for (let i = 1; i < periods.length; i++) {
     const prev = periods[i - 1];
-    if (prev.end === null || prev.end >= periods[i].start)
+    if (prev.start >= periods[i].start || (prev.end === null && !prev.endPending) || (prev.end !== null && prev.end >= periods[i].start))
       throw new Error("经期区间重叠；请先结束上一条进行中的记录");
   }
   const entries: Entry[] = v.entries
@@ -116,7 +118,7 @@ export function validateData(raw: unknown): CycleData {
 }
 export function decodeSnapshot(raw: unknown): Snapshot {
   const v = object(raw);
-  if (v.schemaVersion !== 1 && v.schemaVersion !== 2)
+  if (v.schemaVersion !== 1 && v.schemaVersion !== 2 && v.schemaVersion !== 3)
     throw new Error(
       "数据库版本不受支持。请保留数据并使用兼容版本，切勿清除站点数据",
     );
@@ -128,7 +130,7 @@ export function decodeSnapshot(raw: unknown): Snapshot {
       : rawData,
   );
   return {
-    schemaVersion: 2,
+    schemaVersion: 3,
     revision: integer(v.revision, 0, Number.MAX_SAFE_INTEGER),
     data,
   };
@@ -138,7 +140,7 @@ export function exportBackup(data: CycleData, now = new Date()): string {
   return JSON.stringify({
     app: "CycleMoonBackup",
     schemaVersion: 3,
-    appVersion: "0.3.0",
+    appVersion: "0.3.1",
     exportedAt: now.toISOString(),
     encrypted: false,
     cycleRecords: validated.periods,

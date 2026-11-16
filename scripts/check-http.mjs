@@ -10,7 +10,7 @@ try {
  await new Promise((resolve,reject)=>{child.stdout.once("data",resolve);child.once("error",reject);child.once("exit",code=>reject(Error("Server exited "+code)));});
  const worker=await readFile(path.join(root,"sw.js"),"utf8");
  const assets=JSON.parse(worker.match(/const ASSETS=(\[[^\n]+\]);/)[1]);
- const urls=new Set([...assets,"/","/calendar","/record","/insights","/settings","/sw.js","/pwa-version.json"]);
+ const urls=new Set([...assets,"/","/calendar","/record","/insights","/settings","/calendar/","/record/","/insights/","/settings/","/sw.js","/pwa-version.json"]);
  for(const route of ["index","calendar","record","insights","settings"]) {
   const html=await readFile(path.join(root,route+".html"),"utf8");
   for(const match of html.matchAll(/(?:src|href)=["'](\/[^"']+)["']/g))urls.add(match[1]);

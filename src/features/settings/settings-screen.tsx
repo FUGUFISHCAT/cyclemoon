@@ -1,3 +1,4 @@
+import { exportMessage } from "@/services/share-file";
 import { useDraftSave } from "@/store/use-draft-save";
 import { emptyData } from "@/domain/model";
 import { useState } from "react";
@@ -81,14 +82,14 @@ function SettingsForm({onReload, initialMessage}: {onReload: (message?: string) 
         : "设置未保存，请检查页面提示",
     );
   }
-  function backup() {
+  async function backup() {
     try {
-      downloadText(
+      const result = await downloadText(
         "cycle-backup-" + localToday() + ".json",
         exportBackup(data),
         "application/json;charset=utf-8",
       );
-      setMessage("已交给浏览器下载。请确认文件保存到“文件”App，并妥善保管。");
+      setMessage(exportMessage(result));
     } catch (e) {
       setMessage(String(e));
     }
@@ -127,22 +128,20 @@ function SettingsForm({onReload, initialMessage}: {onReload: (message?: string) 
       onReload("已恢复全部记录与设置。请重新生成并导入日历副本。");
     }
   }
-  function ics() {
+  async function ics() {
     try {
       if (!planReminders(data, localToday()).length) {
         setMessage("暂无未来提醒。请先保存经期记录、周期参数和提醒开关。");
         return;
       }
       if (icsAgain && Platform.OS === "web" && !window.confirm("你已在本次打开中导出过提醒。重复导入可能产生重复事件；已处理旧日历事件？")) return;
-      setIcsAgain(true);
-      downloadText(
+      const result = await downloadText(
         "cycle-reminders-" + localToday() + ".ics",
         exportIcs(data, localToday()),
         "text/calendar;charset=utf-8",
       );
-      setMessage(
-        "已交给浏览器导出 ICS。请用日历 App 导入，并核对提醒是否保留。",
-      );
+      if(result !== "cancelled")setIcsAgain(true);
+      setMessage(exportMessage(result)+" ICS 导入后不会自动更新，实际提醒依赖日历 App。");
     } catch (e) {
       setMessage(String(e));
     }
@@ -302,9 +301,10 @@ function SettingsForm({onReload, initialMessage}: {onReload: (message?: string) 
         })()}/>
         <AppText kind="caption">仅清除此站点数据库内的记录与参数，不会删除下载的备份或已导入的日历事件。</AppText>
       </Card>
+      <Card><AppText kind="heading">浏览器与网站迁移</AppText><AppText>Safari 标签与主屏幕 PWA 的数据可能不共享，更换域名也不会自动同步 IndexedDB。请在旧环境导出未加密 JSON，在新环境选择备份、预览后明确确认恢复；逐项核对记录、日期、待确认状态和设置，并再次导出备份。验证完成前请保留旧网站、旧图标和旧浏览器数据，不要清理。</AppText></Card>
       <PwaStatus />
       <Card>
-        <Row label="版本" value="0.3.0 · PWA 本地版" />
+        <Row label="版本" value="0.3.1 · PWA 本地版" />
         <Row label="外观" value="跟随系统" />
       </Card>
     </Screen>

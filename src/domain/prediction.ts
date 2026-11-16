@@ -35,9 +35,9 @@ export function predict(data: CycleData, today: string): Prediction | null {
     valid.length ? median(valid) : data.profile!.cycleDays,
   );
   const durations = periods
-    .filter((p): p is Period & { end: string } => p.end !== null)
+    .filter((p): p is Period & { end: string } => p.end !== null && !p.endPending)
     .map((p) => daysBetween(p.start, p.end) + 1)
-    .filter((n) => n <= 20)
+    .filter((n) => n <= 14)
     .slice(-6);
   const periodDays = Math.round(
     durations.length ? median(durations) : (data.profile?.periodDays ?? 5),

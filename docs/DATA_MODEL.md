@@ -33,3 +33,6 @@ CycleRepository 接口 load / commit 为平台边界；repository.native.ts 是�
 
 ## V0.3 备份协议补充
 内部 IndexedDB / Snapshot 保持版本 2。导出备份升级为 schemaVersion 3，含 appVersion、exportedAt、encrypted:false、cycleRecords、dailyLogs、preferences；兼容读取 v1/v2 备份。未加密，未来版本拒绝，不静默清空。详见 SECURITY.md。
+
+## V0.3.1（覆盖上述历史 v2 说明）
+数据库版本与 Snapshot schemaVersion 为3，原 state/root 保留并从已知v1/v2解码升级。经期增加可选 endPending:true，必须与 end:null 配对；待确认不代表持续出血，可以在用户明确确认后与下一条经期共存。旧版数据库连接拒绝降级。JSON备份schema仍为3，appVersion=0.3.1。未知/未来版本继续拒绝且不清空。

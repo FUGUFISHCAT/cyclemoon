@@ -1,8 +1,13 @@
 import { renderWorker } from "./service-worker.mjs";
-import { readdir, readFile, writeFile } from "node:fs/promises";
+import { readdir, readFile, writeFile, mkdir } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import path from "node:path";
 const root = path.resolve("dist");
+// Directory indexes support hosts without extensionless .html rewrites.
+for (const route of ["calendar", "record", "insights", "settings"]) {
+  await mkdir(path.join(root, route), {recursive: true});
+  await writeFile(path.join(root, route, "index.html"), await readFile(path.join(root, route + ".html")));
+}
 const html = await readFile(path.join(root, "index.html"), "utf8");
 if (!/<script[^>]+src=["'][^"']*_expo\/static\/js\/web\//.test(html))
   throw Error(
@@ -68,7 +73,7 @@ const policy = `default-src 'self'; script-src 'self' ${[...inlineHashes].join("
 await writeFile(path.join(root, "_headers"), baseHeaders.replace("/*\n", "/*\n  Content-Security-Policy: " + policy + "\n"));
 await writeFile(
   path.join(root, "pwa-version.json"),
-  JSON.stringify({ appVersion: "0.3.0", version }),
+  JSON.stringify({ appVersion: "0.3.1", version }),
 );
 console.log(
   "PWA shell " +

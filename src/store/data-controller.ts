@@ -18,7 +18,7 @@ function message(e: unknown) {
   return e instanceof Error ? e.message : "本地数据操作失败";
 }
 export function dataState(repo: () => CycleRepository, notify: () => void = () => {}): StateCreator<State> { return (set, get) => ({
-  snapshot: { schemaVersion: 2, revision: 0, data: emptyData() },
+  snapshot: { schemaVersion: 3, revision: 0, data: emptyData() },
   ready: false,
   busy: false,
   error: null,

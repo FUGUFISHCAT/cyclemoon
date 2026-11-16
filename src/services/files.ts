@@ -1,9 +1,9 @@
 // Native file adapter is reserved; never pretend a download succeeded.
-export function downloadText(
+export async function downloadText(
   _name: string,
   _content: string,
   _type: string,
-): void {
+): Promise<import("./share-file").ExportResult> {
   throw new Error("原生文件适配尚未接入；请使用 PWA 导出。");
 }
 export async function pickBackup(): Promise<string | null> {

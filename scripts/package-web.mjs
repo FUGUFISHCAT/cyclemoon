@@ -26,9 +26,9 @@ for(const file of files) {
 }
 const version=JSON.parse(await readFile("dist/pwa-version.json","utf8"));
 assert.match(version.version,/^[a-f0-9]{16}$/);
-assert.equal(version.appVersion,"0.3.0");
+assert.equal(version.appVersion,"0.3.1");
 await mkdir("artifacts",{recursive:true});
-const zip=path.resolve(`artifacts/cyclemoon-pwa-0.3.0-${version.version}-workers.zip`);
+const zip=path.resolve(`artifacts/cyclemoon-pwa-0.3.1-${version.version}-static.zip`);
 const quote=value=>"'"+value.replaceAll("'","''")+"'";
 const script=`$ErrorActionPreference='Stop'
 [Console]::OutputEncoding=[System.Text.UTF8Encoding]::new($false)
@@ -61,5 +61,5 @@ if(child.status!==0)throw Error(child.stderr||"ZIP creation failed");
 assert.deepEqual(JSON.parse(child.stdout.trim()),expected,"ZIP content differs from checked dist");
 const sha256=createHash("sha256").update(await readFile(zip)).digest("hex");
 await writeFile(zip+".sha256",sha256+"  "+path.basename(zip)+"\n");
-await writeFile(zip+".manifest.json",JSON.stringify({appVersion:"0.3.0",shellVersion:version.version,sha256,files:expected},null,2));
+await writeFile(zip+".manifest.json",JSON.stringify({appVersion:"0.3.1",shellVersion:version.version,sha256,files:expected},null,2));
 console.log(`Verified ZIP: ${zip}\n${files.length} files; SHA-256 ${sha256}`);

@@ -1,8 +1,13 @@
-export function downloadText(
+import { shareOrDownload } from "./share-file";
+export async function downloadText(
   name: string,
   content: string,
   type: string,
-): void {
+){
+  const file=new File([content],name,{type});
+  return shareOrDownload(file,navigator,()=>downloadFile(name,content,type));
+}
+function downloadFile(name: string, content: string, type: string): void {
   const blob = new Blob([content], { type }),
     url = URL.createObjectURL(blob),
     a = document.createElement("a");

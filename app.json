@@ -2,7 +2,7 @@
   "expo": {
     "name": "月相 Cycle",
     "slug": "cycle",
-    "version": "0.3.0",
+    "version": "0.3.1",
     "orientation": "portrait",
     "icon": "./public/icons/icon-1024.png",
     "scheme": "yuexiang-cycle",

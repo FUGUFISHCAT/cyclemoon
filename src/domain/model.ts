@@ -1,4 +1,4 @@
-export type Period = { id: string; start: string; end: string | null };
+export type Period = { id: string; start: string; end: string | null; endPending?: true };
 export type Entry = {
   date: string;
   flow: "none" | "light" | "medium" | "heavy";
@@ -30,7 +30,7 @@ export type CycleData = {
   entries: Entry[];
   reminders: Reminders;
 };
-export type Snapshot = { schemaVersion: 2; revision: number; data: CycleData };
+export type Snapshot = { schemaVersion: 3; revision: number; data: CycleData };
 export const defaultReminders = (): Reminders => ({
   hour: 9,
   minute: 0,

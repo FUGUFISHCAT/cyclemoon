@@ -52,7 +52,7 @@ export function planReminders(data: CycleData, today: string): Reminder[] {
   const latest = [...data.periods]
     .filter((p) => p.start <= today)
     .sort((a, b) => b.start.localeCompare(a.start))[0];
-  if (latest?.end === null) {
+  if (latest?.end === null && !latest.endPending) {
     const target = addDays(
       latest.start,
       p?.periodDays ?? data.profile?.periodDays ?? 5,

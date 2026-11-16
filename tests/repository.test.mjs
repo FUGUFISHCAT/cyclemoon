@@ -74,7 +74,7 @@ test("v1 数据库升级不清空旧记录", async () => {
   delete data.reminders;
   await seed(factory, "upgrade", 1, { schemaVersion: 1, revision: 8, data });
   const result = await createIndexedRepository(factory, "upgrade").load();
-  assert.equal(result.schemaVersion, 2);
+  assert.equal(result.schemaVersion, 3);
   assert.equal(result.revision, 8);
   assert.deepEqual(result.data.periods, data.periods);
 });

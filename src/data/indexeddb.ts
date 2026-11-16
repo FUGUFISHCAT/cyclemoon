@@ -5,7 +5,7 @@ import { RevisionConflict } from "./repository.ts";
 import type { CycleRepository } from "./repository.ts";
 
 export const DB_NAME = "cyclemoon-local";
-export const DB_VERSION = 2;
+export const DB_VERSION = 3;
 export function createIndexedRepository(
   factory: IDBFactory,
   name = DB_NAME,
@@ -63,7 +63,7 @@ export function createIndexedRepository(
           try {
             value =
               request.result === undefined
-                ? { schemaVersion: 2, revision: 0, data: emptyData() }
+                ? { schemaVersion: 3, revision: 0, data: emptyData() }
                 : decodeSnapshot(request.result);
           } catch (e) {
             error = e;
@@ -96,7 +96,7 @@ export function createIndexedRepository(
                 : decodeSnapshot(request.result);
             if (previous.revision !== expectedRevision)
               throw new RevisionConflict();
-            value = { schemaVersion: 2, revision: expectedRevision + 1, data };
+            value = { schemaVersion: 3, revision: expectedRevision + 1, data };
             tx.objectStore("state").put(value, "root");
           } catch (e) {
             reason = e;

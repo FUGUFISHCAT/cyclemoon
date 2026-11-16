@@ -42,6 +42,7 @@ function RecordForm({ initialDate, onReload }: { initialDate: string; onReload: 
   } = useDataStore();
   const save = useDraftSave();
   const [sheet, setSheet] = useState<"period" | "body" | null>(null);
+  const [endPending,setEndPending]=useState(false);
   const initial = data.entries.find((e) => e.date === initialDate);
   const [start, setStart] = useState(initialDate),
     [end, setEnd] = useState(""),
@@ -83,13 +84,14 @@ function RecordForm({ initialDate, onReload }: { initialDate: string; onReload: 
           ...data,
           periods: [
             ...data.periods.filter((p) => p.id !== id),
-            { id, start, end: end || null },
+            { id, start, end: end || null, ...(endPending?{endPending:true as const}:{}) },
           ],
         })
       ) {
         setFeedback("经期已保存到此设备");
         setEditing(null);
         setEnd("");
+        setEndPending(false);
         setSheet(null);
       }
     } catch (e) {
@@ -158,6 +160,7 @@ function RecordForm({ initialDate, onReload }: { initialDate: string; onReload: 
           value={end}
           onChange={setEnd}
         />
+        <Toggle label="结束日期不确定，保留待确认（日期留空）" value={endPending} onChange={setEndPending}/>
         <Button
           disabled={!ready || busy}
           title={editing ? "保存经期修改" : "保存经期"}
@@ -250,7 +253,7 @@ function RecordForm({ initialDate, onReload }: { initialDate: string; onReload: 
         {[...data.periods].reverse().map((p) => (
           <Card key={p.id}>
             <AppText>
-              {p.start} → {p.end ?? "进行中"}
+              {p.start} → {p.end ?? (p.endPending ? "结束日期待确认" : "进行中")}
             </AppText>
             <Button
               secondary
@@ -259,6 +262,7 @@ function RecordForm({ initialDate, onReload }: { initialDate: string; onReload: 
                 setEditing(p.id);
                 setStart(p.start);
                 setEnd(p.end ?? "");
+                setEndPending(p.endPending===true);
                 setSheet("period");
               }}
             />
