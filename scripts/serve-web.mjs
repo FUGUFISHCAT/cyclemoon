@@ -3,6 +3,7 @@ import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
 const root = path.resolve(process.env.WEB_ROOT ?? "dist"),
   port = Number(process.env.PORT ?? 4173);
+const base = JSON.parse(await readFile(path.join(root,"pwa-version.json"),"utf8")).base ?? "";
 const types = {
   ".html": "text/html;charset=utf-8",
   ".js": "application/javascript;charset=utf-8",
@@ -30,7 +31,9 @@ const server = http.createServer(async (req, res) => {
       decoded.includes("\0")
     )
       throw Error("path");
-    let file = path.resolve(root, "." + decoded);
+    if (base && decoded === base) {res.writeHead(301,{Location:base+"/"});res.end();return;}
+    if (base && !decoded.startsWith(base+"/")) throw Error("Outside app");
+    let file = path.resolve(root, "." + decoded.slice(base.length));
     if (!file.startsWith(root + path.sep)) file = path.join(root, "index.html");
     try {
       if ((await stat(file)).isDirectory())

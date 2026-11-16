@@ -1,5 +1,7 @@
 # 月相 Cycle / CycleMoon
 
+GitHub 自动部署已配置：在仓库 Settings → Pages 选择 **GitHub Actions**，然后在 GitHub Desktop 点击 **Push origin**。详见 [GitHub Pages 指南](docs/GITHUB_PAGES.md)。
+
 > 当前候选版本 **0.3.1**。使用 artifacts/cyclemoon-pwa-0.3.1-9df63fca5ed370cf-static.zip；[修复报告](docs/V0.3.1_REPORT.md)、[CloudBase指南](docs/CLOUDBASE_DEPLOYMENT.md)、[数据迁移](docs/MIGRATION.md)。下文 V0.3.0 报告和包路径为历史记录，不用于本次迁移。
 
 > 2026-11-15 最新：Windows ZIP 子目录路径已修复，请使用 artifacts/cyclemoon-pwa-0.3.0-930729e04885e306-workers.zip。原无 -workers 后缀包已知有打包路径问题，不再用于部署。[Workers 修复与上传步骤](docs/WORKERS_DEPLOYMENT_FIX.md)。

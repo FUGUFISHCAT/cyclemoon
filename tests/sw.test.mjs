@@ -4,7 +4,7 @@ import vm from "node:vm";
 import { webcrypto, createHash } from "node:crypto";
 import { renderWorker } from "../scripts/service-worker.mjs";
 
-function environment({ fail = false, clients = 1, integrity = {}, content } = {}) {
+function environment({ fail = false, clients = 1, integrity = {}, content, base = "" } = {}) {
   const listeners = {},
     stores = new Map(),
     deleted = [];
@@ -71,9 +71,10 @@ function environment({ fail = false, clients = 1, integrity = {}, content } = {}
   vm.runInNewContext(
     renderWorker(
       "new",
-      ["/index.html", "/settings.html", "/entry.js"],
-      ["/", "/settings"],
+      ["/index.html", "/settings.html", "/entry.js"].map(url=>base+url),
+      [base || "/", base+"/settings"],
       integrity,
+      base,
     ),
     context,
   );
@@ -92,6 +93,17 @@ function environment({ fail = false, clients = 1, integrity = {}, content } = {}
   }
   return { stores, deleted, dispatch, self };
 }
+test("GitHub Pages子路径离线导航及作用域隔离，不接管其他项目",async()=>{
+ const e=environment({base:"/cyclemoon"});await e.dispatch("install");
+ for(const [route,expected] of [["/cyclemoon/","/cyclemoon/index.html"],["/cyclemoon/settings/","/cyclemoon/settings.html"]]){
+  const response=await e.dispatch("fetch",{request:{method:"GET",mode:"navigate",url:"https://cycle.test"+route}});
+  assert.equal(await response.text(),"cached:"+expected);
+ }
+ for(const route of ["/settings","/other/","/cyclemoon-other/settings"]){
+  assert.equal(await e.dispatch("fetch",{request:{method:"GET",mode:"navigate",url:"https://cycle.test"+route}}),undefined);
+ }
+ assert.ok(e.stores.has("cyclemoon-shell-cyclemoon-new"));
+});
 test("安装缓存应用外壳，不触碰 IndexedDB；离线导航可读取缓存", async () => {
   const e = environment();
   await e.dispatch("install");

@@ -1,6 +1,7 @@
-export function renderWorker(version, urls, routes, integrity = {}) {
+export function renderWorker(version, urls, routes, integrity = {}, base = "") {
   return `/* Generated app shell only; no IndexedDB access and no runtime data caching. */
-const PREFIX='cyclemoon-shell-';
+const BASE=${JSON.stringify(base)};
+const PREFIX='cyclemoon-shell-'+(BASE?BASE.slice(1)+'-':'');
 const VERSION=${JSON.stringify(version)};
 const CACHE=PREFIX+VERSION;
 const ASSETS=${JSON.stringify(urls)};
@@ -44,15 +45,16 @@ self.addEventListener('message',event=>{
 self.addEventListener('fetch',event=>{
   const request=event.request,url=new URL(request.url);
   if(request.method!=='GET'||url.origin!==self.location.origin)return;
-  if(url.pathname==='/sw.js'||url.pathname==='/pwa-version.json')return;
+  if(BASE && !url.pathname.startsWith(BASE+'/'))return;
+  if(url.pathname===BASE+'/sw.js'||url.pathname===BASE+'/pwa-version.json')return;
   const nav=request.mode==='navigate';
   const canonical=url.pathname.replace(/\\/$/,'')||'/';
   if(nav&&!ROUTES.includes(canonical))return;
-  const oldChunk=/^\\/_expo\\/static\\/.*[-][a-f0-9]{16,}\\.(js|css)$/.test(url.pathname);
+  const oldChunk=/^\\/_expo\\/static\\/.*[-][a-f0-9]{16,}\\.(js|css)$/.test(url.pathname.slice(BASE.length));
   if(!nav&&!ASSETS.includes(url.pathname)&&!oldChunk)return;
   event.respondWith((async()=>{
     const cache=await caches.open(CACHE);
-    const pathname=nav?(canonical==='/'?'/index.html':canonical+'.html'):url.pathname;
+    const pathname=nav?(canonical===(BASE||'/')?BASE+'/index.html':canonical+'.html'):url.pathname;
     const cached=await cache.match(pathname);
     if(cached)return cached;
     if(oldChunk) {

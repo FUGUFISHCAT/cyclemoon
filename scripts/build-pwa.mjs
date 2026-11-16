@@ -2,7 +2,15 @@ import { renderWorker } from "./service-worker.mjs";
 import { readdir, readFile, writeFile, mkdir } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import path from "node:path";
+const base = process.env.EXPO_PUBLIC_BASE_PATH ?? "";
+if (!["", "/cyclemoon"].includes(base)) throw Error("Invalid deployment base");
 const root = path.resolve("dist");
+const manifestPath = path.join(root, "manifest.webmanifest");
+const manifest = JSON.parse(await readFile(manifestPath,"utf8"));
+manifest.id = manifest.start_url = manifest.scope = base + "/";
+manifest.icons = manifest.icons.map(icon => ({...icon, src: base + icon.src}));
+await writeFile(manifestPath, JSON.stringify(manifest,null,2));
+await writeFile(path.join(root,".nojekyll"), "");
 // Directory indexes support hosts without extensionless .html rewrites.
 for (const route of ["calendar", "record", "insights", "settings"]) {
   await mkdir(path.join(root, route), {recursive: true});
@@ -40,7 +48,7 @@ if (
 )
   throw Error("Unexpected private or test artifact in dist");
 const urls = files.map(
-  (p) => "/" + path.relative(root, p).replaceAll(path.sep, "/"),
+  (p) => base + "/" + path.relative(root, p).replaceAll(path.sep, "/"),
 );
 const hash = createHash("sha256");
 hash.update(renderWorker.toString());
@@ -53,7 +61,7 @@ for (const file of files) {
   hash.update(await readFile(file));
   const bytes = await readFile(file);
   if (/-----BEGIN (?:[A-Z ]+ )?PRIVATE KEY-----/.test(bytes.toString("utf8"))) throw Error("Private key found in static output");
-  integrity["/" + path.relative(root, file).replaceAll(path.sep, "/")] = createHash("sha256").update(bytes).digest("hex");
+  integrity[base + "/" + path.relative(root, file).replaceAll(path.sep, "/")] = createHash("sha256").update(bytes).digest("hex");
   if (file.endsWith(".json")) {
     const content = JSON.parse(bytes.toString("utf8"));
     if (content.app === "CycleMoonBackup" || content.cycleRecords || content.dailyLogs || content.data?.periods || content.data?.entries)
@@ -66,14 +74,15 @@ for (const file of files) {
   }
 }
 const version = hash.digest("hex").slice(0, 16);
-const routes = ["/", "/calendar", "/record", "/insights", "/settings"];
-const worker = renderWorker(version, urls, routes, integrity);
+const routes = ["/", "/calendar", "/record", "/insights", "/settings"].map(route => base + route);
+if(base) routes[0]=base;
+const worker = renderWorker(version, urls, routes, integrity, base);
 await writeFile(path.join(root, "sw.js"), worker);
 const policy = `default-src 'self'; script-src 'self' ${[...inlineHashes].join(" ")}; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'`;
 await writeFile(path.join(root, "_headers"), baseHeaders.replace("/*\n", "/*\n  Content-Security-Policy: " + policy + "\n"));
 await writeFile(
   path.join(root, "pwa-version.json"),
-  JSON.stringify({ appVersion: "0.3.1", version }),
+  JSON.stringify({ appVersion: "0.3.1", version, base }),
 );
 console.log(
   "PWA shell " +

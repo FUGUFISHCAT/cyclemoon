@@ -10,6 +10,7 @@
   window.addEventListener("load", resize);
 })();
 (() => {
+  const base = new URL(".", document.currentScript.src).pathname;
   const info = { status: "正在检查离线支持…", waiting: false };
   let registration,
     refreshing = false;
@@ -43,15 +44,16 @@
   };
   window.addEventListener("load", async () => {
     try {
-      const existing = await navigator.serviceWorker.getRegistration("/");
-      const response = await fetch("/pwa-version.json", { cache: "no-store" }).catch(() => null);
+      let existing = await navigator.serviceWorker.getRegistration(base);
+      if (existing && existing.scope !== new URL(base, location.href).href) existing = undefined;
+      const response = await fetch(base + "pwa-version.json", { cache: "no-store" }).catch(() => null);
       if (!existing && !response?.ok) {
         publish("开发模式：离线缓存未启用，请运行静态构建预览");
         return;
       }
       const version = response?.ok ? await response.json() : {version: "已缓存版本"};
-      registration = existing ?? await navigator.serviceWorker.register("/sw.js", {
-        scope: "/",
+      registration = existing ?? await navigator.serviceWorker.register(base + "sw.js", {
+        scope: base,
         updateViaCache: "none",
       });
       if (registration.waiting) updateReady();

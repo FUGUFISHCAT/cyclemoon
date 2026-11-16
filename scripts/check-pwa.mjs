@@ -2,12 +2,13 @@ import assert from "node:assert/strict";
 import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
 const root = path.resolve("dist");
+const base = JSON.parse(await readFile(path.join(root,"pwa-version.json"),"utf8")).base ?? "";
 const manifest = JSON.parse(
   await readFile(path.join(root, "manifest.webmanifest"), "utf8"),
 );
 assert.equal(manifest.display, "standalone");
-assert.equal(manifest.start_url, "/");
-assert.equal(manifest.scope, "/");
+assert.equal(manifest.start_url, base + "/");
+assert.equal(manifest.scope, base + "/");
 const apple = await readFile(path.join(root, "icons/apple-touch-icon.png"));
 assert.equal(apple.readUInt32BE(16), 180);
 assert.equal(apple.readUInt32BE(20), 180);
@@ -21,7 +22,7 @@ for (const url of urls) {
     url.startsWith("/") && !url.includes(":") && !url.includes("\\"),
     "unsafe asset path",
   );
-  await stat(path.join(root, url));
+  await stat(path.join(root, url.slice(base.length)));
 }
 for (const route of ["index", "calendar", "record", "insights", "settings"]) {
   const html = await readFile(path.join(root, route + ".html"), "utf8");

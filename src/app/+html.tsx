@@ -5,6 +5,8 @@ import {
   useServerDocumentContext,
 } from "expo-router/html";
 
+const basePath = process.env.EXPO_PUBLIC_BASE_PATH ?? "";
+
 export default function Root({ children }: PropsWithChildren) {
   const { headNodes, bodyNodes, htmlAttributes, bodyAttributes } =
     useServerDocumentContext();
@@ -27,11 +29,11 @@ export default function Root({ children }: PropsWithChildren) {
           name="description"
           content="月相 Cycle：本地优先的经期记录与日历估计。"
         />
-        <link rel="manifest" href="/manifest.webmanifest" />
+        <link rel="manifest" href={basePath + "/manifest.webmanifest"} />
         <link
           rel="apple-touch-icon"
           sizes="180x180"
-          href="/icons/apple-touch-icon.png"
+          href={basePath + "/icons/apple-touch-icon.png"}
         />
         <ScrollViewStyleReset />
         <style
@@ -40,7 +42,7 @@ export default function Root({ children }: PropsWithChildren) {
               `html,body,#root{height:100%;min-height:0;background:${palettes.light.background}}body{overscroll-behavior-y:none}#root{height:var(--app-height,100%);padding-top:env(safe-area-inset-top);padding-right:env(safe-area-inset-right);padding-bottom:env(safe-area-inset-bottom);padding-left:env(safe-area-inset-left);box-sizing:border-box}#cycle-record-sheet{height:var(--app-height,100dvh);max-height:var(--app-height,100dvh);padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right);box-sizing:border-box}input,textarea{font-size:16px!important}*:focus-visible{outline:2px solid ${palettes.light.primary};outline-offset:2px}@media(prefers-color-scheme:dark){html,body,#root{background:${palettes.dark.background}}}`,
           }}
         />
-        <script defer src="/pwa-register.js" />
+        <script defer src={basePath + "/pwa-register.js"} />
       </head>
       <body {...bodyAttributes}>
         {children}
