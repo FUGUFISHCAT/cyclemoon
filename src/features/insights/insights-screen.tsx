@@ -1,4 +1,4 @@
-import { AppText, Card, Notice, Row, Screen } from "@/components/ui";
+import { AppText, Card, Notice, Row } from "@/components/ui";
 import { DataStatus } from "@/components/data-status";
 import { useDataStore } from "@/store/use-data-store";
 import { predict } from "@/domain/prediction";
@@ -11,7 +11,7 @@ export default function InsightsScreen() {
   const p = ready ? predict(data, localToday()) : null,
     periods = [...data.periods].sort((a, b) => a.start.localeCompare(b.start));
   return (
-    <Screen title="洞察" subtitle="让真实记录帮助你认识变化。">
+    <>
       <DataStatus />
       <Card tinted>
         <AppText kind="heading">{p ? "当前估计" : "等待更多记录"}</AppText>
@@ -24,14 +24,7 @@ export default function InsightsScreen() {
               label="下次月经经验范围"
               value={p.earliest + " 至 " + p.latest}
             />
-            <Row
-              label="估计排卵附近"
-              value={p.ovulationFrom + " 至 " + p.ovulationTo}
-            />
-            <AppText kind="caption">
-              {p.basis}。排卵附近按经验日期范围前 18–12
-              天粗略展示，已随不确定性扩大，不表示检测到实际排卵，不能作为可靠避孕依据。
-            </AppText>
+            <AppText kind="caption">{p.basis}。范围仅为估计，不能用于可靠避孕。</AppText>
             <Row label="排除的异常间隔" value={String(p.excluded)} />
           </>
         )}
@@ -52,6 +45,6 @@ export default function InsightsScreen() {
       <Notice>
         没有预测准确率声明。经验范围不是统计置信区间；有持续异常或不适时请咨询专业医疗人员。
       </Notice>
-    </Screen>
+    </>
   );
 }

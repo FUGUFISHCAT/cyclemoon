@@ -8,7 +8,7 @@
 2. 确认仓库允许运行 Actions。GitHub 免费账户使用 Pages 通常需公开仓库；若为私有仓库，请先查看账号支持，不要为此未经审查直接公开内容或购买套餐。
 3. 本地配置提交后，在 GitHub Desktop 点击 **Push origin**（当前 master 分支）。此后推送 master 或 main 会自动测试、构建并发布。
 4. GitHub 仓库 **Actions → Deploy CycleMoon to GitHub Pages** 查看进度；首次也可点 Run workflow。需要 build 与 deploy 都成功，不能只看上传完成。
-5. 部署后确认 Pages 给出的网址，检查图标、五页导航、刷新、设置保存和离线。未实际运行云端工作流前不能声称线上部署通过。
+5. 部署后确认 Pages 给出的网址，检查图标、今天/日历/我的三栏导航、刷新、设置保存和离线。未实际运行云端工作流前不能声称线上部署通过。
 
 流程使用 GitHub 内置临时 GITHUB_TOKEN/OIDC 权限，不需要你创建 PAT、保存密码或添加云密钥。只上传 dist 应用产物，生产数据没有进入构建。
 

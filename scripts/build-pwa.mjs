@@ -82,7 +82,7 @@ const policy = `default-src 'self'; script-src 'self' ${[...inlineHashes].join("
 await writeFile(path.join(root, "_headers"), baseHeaders.replace("/*\n", "/*\n  Content-Security-Policy: " + policy + "\n"));
 await writeFile(
   path.join(root, "pwa-version.json"),
-  JSON.stringify({ appVersion: "0.3.1", version, base }),
+  JSON.stringify({ appVersion: "0.4.0", version, base }),
 );
 console.log(
   "PWA shell " +

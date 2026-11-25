@@ -140,7 +140,7 @@ export function exportBackup(data: CycleData, now = new Date()): string {
   return JSON.stringify({
     app: "CycleMoonBackup",
     schemaVersion: 3,
-    appVersion: "0.3.1",
+    appVersion: "0.4.0",
     exportedAt: now.toISOString(),
     encrypted: false,
     cycleRecords: validated.periods,

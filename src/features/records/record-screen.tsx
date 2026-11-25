@@ -1,3 +1,5 @@
+import { View } from "react-native";
+import { entryForDate, dateSwitchNeedsConfirmation } from "@/domain/record-draft";
 import { Sheet } from "@/components/sheet";
 import { useDraftSave } from "@/store/use-draft-save";
 import { useState } from "react";
@@ -34,19 +36,23 @@ export default function RecordScreen() {
   const date = isDateKey(queryDate) ? queryDate : localToday();
   return <RecordForm key={date + generation} initialDate={date} onReload={() => reset(v => v + 1)} />;
 }
-function RecordForm({ initialDate, onReload }: { initialDate: string; onReload: () => void }) {
+function RecordForm({ initialDate, onReload, panel }: { initialDate: string; onReload: () => void; panel?: {visible:boolean;onClose:()=>void} }) {
   const {
     snapshot: { data },
     ready,
     busy,
   } = useDataStore();
   const save = useDraftSave();
-  const [sheet, setSheet] = useState<"period" | "body" | null>(null);
-  const [endPending,setEndPending]=useState(false);
-  const initial = data.entries.find((e) => e.date === initialDate);
-  const [start, setStart] = useState(initialDate),
-    [end, setEnd] = useState(""),
-    [editing, setEditing] = useState<string | null>(null);
+  const [sheet, setSheet] = useState<"period" | "body" | null>("body");
+  const initialPeriod=data.periods.find(p=>p.end?initialDate>=p.start&&initialDate<=p.end:initialDate===p.start);
+  const [endPending,setEndPending]=useState(initialPeriod?.endPending===true);
+  const initial = entryForDate(data,initialDate);
+  const [baseline,setBaseline]=useState(initial);
+  const [pendingDate,setPendingDate]=useState<string|null>(null);
+  const [closing,setClosing]=useState(false);
+  const [start, setStart] = useState(initialPeriod?.start ?? initialDate),
+    [end, setEnd] = useState(initialPeriod?.end ?? ""),
+    [editing, setEditing] = useState<string | null>(initialPeriod?.id ?? null);
   const [entryDate, setEntryDate] = useState(initialDate),
     [flow, setFlow] = useState<Entry["flow"]>(initial?.flow ?? "none"),
     [spotting, setSpotting] = useState(initial?.spotting ?? false);
@@ -54,9 +60,13 @@ function RecordForm({ initialDate, onReload }: { initialDate: string; onReload: 
     [fatigue, setFatigue] = useState(String(initial?.fatigue ?? 0)),
     [mood, setMood] = useState(initial?.mood ?? ""),
     [note, setNote] = useState(initial?.note ?? "");
+  const [periodBaseline,setPeriodBaseline]=useState(JSON.stringify({start,end,editing,endPending}));
   const [feedback, setFeedback] = useState(""),
     [deleting, setDeleting] = useState<string | null>(null);
+  const draft: Entry={date:entryDate,flow,spotting,pain:Number(pain),fatigue:Number(fatigue),mood,note};
+  function switchDate(date:string){if(!isDateKey(date)||date===entryDate)return;if(dateSwitchNeedsConfirmation(draft,baseline,date))setPendingDate(date);else loadEntry(date);}
   function loadEntry(date: string) {
+    setBaseline(entryForDate(data,date));
     const e = data.entries.find((e) => e.date === date);
     setEntryDate(date);
     setFlow(e?.flow ?? "none");
@@ -89,6 +99,7 @@ function RecordForm({ initialDate, onReload }: { initialDate: string; onReload: 
         })
       ) {
         setFeedback("经期已保存到此设备");
+        setPeriodBaseline(JSON.stringify({start,end:"",editing:null,endPending:false}));
         setEditing(null);
         setEnd("");
         setEndPending(false);
@@ -118,6 +129,7 @@ function RecordForm({ initialDate, onReload }: { initialDate: string; onReload: 
           entries: [...data.entries.filter((e) => e.date !== entryDate), entry],
         })
       ) {
+        setBaseline(entry);
         setFeedback("身体记录已保存到此设备");
         setSheet(null);
       }
@@ -140,13 +152,14 @@ function RecordForm({ initialDate, onReload }: { initialDate: string; onReload: 
     }
   }
   return (
-    <Screen title="记录" subtitle="只存于此设备，离线也能记下今天。">
+    <RecordContainer panel={panel} onClose={()=>{if(JSON.stringify(draft)!==JSON.stringify(baseline)||JSON.stringify({start,end,editing,endPending})!==periodBaseline)setClosing(true);else panel?.onClose();}}>
+      {closing && <Card><AppText>关闭将放弃未保存内容。</AppText><Button title="放弃草稿并关闭" onPress={()=>{setClosing(false);panel?.onClose();onReload();}}/><Button secondary title="继续编辑" onPress={()=>setClosing(false)}/></Card>}
       <DataStatus />
       <Button secondary title="放弃草稿并载入最新记录" onPress={onReload} />
       {feedback && <Notice>{feedback}</Notice>}
       <Button title="记经期开始 / 编辑日期" disabled={busy} onPress={() => setSheet("period")} />
       <Button secondary title="记身体与心情" disabled={busy} onPress={() => setSheet("body")} />
-      <Sheet visible={sheet === "period"} onClose={() => setSheet(null)}>
+      {sheet === "period" && <View style={{gap:16}}>
       <DataStatus />{feedback && <Notice>{feedback}</Notice>}
       <Card>
         <AppText kind="heading">
@@ -178,8 +191,8 @@ function RecordForm({ initialDate, onReload }: { initialDate: string; onReload: 
           />
         )}
       </Card>
-      </Sheet>
-      <Sheet visible={sheet === "body"} onClose={() => setSheet(null)}>
+      </View>}
+      {sheet === "body" && <View style={{gap:16}}>
       <DataStatus />{feedback && <Notice>{feedback}</Notice>}
       <Card>
         <AppText kind="heading">身体与心情</AppText>
@@ -187,17 +200,9 @@ function RecordForm({ initialDate, onReload }: { initialDate: string; onReload: 
           dateInput
           label="身体记录日期 YYYY-MM-DD"
           value={entryDate}
-          onChange={setEntryDate}
+          onChange={switchDate}
         />
-        <Button
-          secondary
-          title="读取这一天的已有身体记录"
-          disabled={!ready || busy}
-          onPress={() => {
-            if (isDateKey(entryDate)) loadEntry(entryDate);
-            else setFeedback("请先填写有效日期");
-          }}
-        />
+        {pendingDate && <Card><AppText>切换日期将放弃当前未保存内容。</AppText><Button title="放弃草稿并切换日期" onPress={()=>{loadEntry(pendingDate);setPendingDate(null);}}/><Button secondary title="保留当前草稿" onPress={()=>setPendingDate(null)}/></Card>}
         <Choices
           label="流量"
           value={flow}
@@ -230,7 +235,7 @@ function RecordForm({ initialDate, onReload }: { initialDate: string; onReload: 
           onPress={() => void saveEntry()}
         />
       </Card>
-      </Sheet>
+      </View>}
       {deleting && (
         <Card tinted>
           <AppText>确认永久删除这条记录？建议先在设置导出备份。</AppText>
@@ -259,6 +264,7 @@ function RecordForm({ initialDate, onReload }: { initialDate: string; onReload: 
               secondary
               title={"编辑 " + p.start + " 经期"}
               onPress={() => {
+                setPeriodBaseline(JSON.stringify({start:p.start,end:p.end??"",editing:p.id,endPending:p.endPending===true}));
                 setEditing(p.id);
                 setStart(p.start);
                 setEnd(p.end ?? "");
@@ -292,7 +298,7 @@ function RecordForm({ initialDate, onReload }: { initialDate: string; onReload: 
                 secondary
                 title={"编辑 " + e.date + " 身体记录"}
                 onPress={() => {
-                  loadEntry(e.date);
+                  switchDate(e.date);
                   setSheet("body");
                 }}
               />
@@ -304,6 +310,9 @@ function RecordForm({ initialDate, onReload }: { initialDate: string; onReload: 
             </Card>
           ))}
       </Card>
-    </Screen>
+    </RecordContainer>
   );
 }
+
+function RecordContainer({panel,onClose,children}: React.PropsWithChildren<{panel?:{visible:boolean;onClose:()=>void};onClose:()=>void}>){return panel?<Sheet visible={panel.visible} onClose={onClose}>{children}</Sheet>:<Screen title="记录" subtitle="本地保存">{children}</Screen>;}
+export function RecordPanel({date,visible,onClose}:{date:string;visible:boolean;onClose:()=>void}){const [generation,reset]=useState(0);const ready=useDataStore(s=>s.ready);return ready?<RecordForm key={date+generation} initialDate={date} onReload={()=>reset(v=>v+1)} panel={{visible,onClose}}/>:null;}

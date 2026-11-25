@@ -1,3 +1,4 @@
+import InsightsScreen from "@/features/insights/insights-screen";
 import { exportMessage } from "@/services/share-file";
 import { useDraftSave } from "@/store/use-draft-save";
 import { emptyData } from "@/domain/model";
@@ -26,7 +27,7 @@ export default function SettingsScreen() {
   return ready ? (
     <SettingsForm key={generation} initialMessage={result} onReload={(message = "") => {setResult(message); reset(v => v + 1);}} />
   ) : (
-    <Screen title="设置" subtitle="正在准备本地数据">
+    <Screen title="我的" subtitle="正在准备本地数据">
       <DataStatus />
     </Screen>
   );
@@ -147,8 +148,9 @@ function SettingsForm({onReload, initialMessage}: {onReload: (message?: string) 
     }
   }
   return (
-    <Screen title="设置" subtitle="本地保存，自己掌握。">
+    <Screen title="我的" subtitle="本地保存，自己掌握。">
       <DataStatus />
+      <InsightsScreen/>
       <Button secondary title="放弃设置草稿并载入最新数据" onPress={() => onReload()} />
       {message && <Notice>{message}</Notice>}
       <Card>
@@ -304,7 +306,7 @@ function SettingsForm({onReload, initialMessage}: {onReload: (message?: string) 
       <Card><AppText kind="heading">浏览器与网站迁移</AppText><AppText>Safari 标签与主屏幕 PWA 的数据可能不共享，更换域名也不会自动同步 IndexedDB。请在旧环境导出未加密 JSON，在新环境选择备份、预览后明确确认恢复；逐项核对记录、日期、待确认状态和设置，并再次导出备份。验证完成前请保留旧网站、旧图标和旧浏览器数据，不要清理。</AppText></Card>
       <PwaStatus />
       <Card>
-        <Row label="版本" value="0.3.1 · PWA 本地版" />
+        <Row label="版本" value="0.4.0 · PWA 本地版" />
         <Row label="外观" value="跟随系统" />
       </Card>
     </Screen>

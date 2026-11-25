@@ -8,11 +8,9 @@ import { useTheme } from "@/theme/tokens";
 export { ErrorBoundary } from "expo-router";
 
 const tabs = [
-  { name: "index", title: "首页", icon: "◒" },
+  { name: "index", title: "今天", icon: "◒" },
   { name: "calendar", title: "日历", icon: "▦" },
-  { name: "record", title: "记录", icon: "＋" },
-  { name: "insights", title: "洞察", icon: "≈" },
-  { name: "settings", title: "设置", icon: "⚙" },
+  { name: "settings", title: "我的", icon: "⚙" },
 ] as const;
 const subscribeHydration = () => () => {};
 const clientSnapshot = () => true;
@@ -67,6 +65,8 @@ export default function RootLayout() {
           tabBarLabelStyle: { fontSize: 12 },
         }}
       >
+        <Tabs.Screen name="record" options={{href:null}}/>
+        <Tabs.Screen name="insights" options={{href:null}}/>
         {tabs.map((tab) => (
           <Tabs.Screen
             key={tab.name}

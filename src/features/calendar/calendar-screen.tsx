@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Pressable, View } from "react-native";
-import { router } from "expo-router";
+import { RecordPanel } from "@/features/records/record-screen";
 import { AppText, Button, Card, Notice, Screen } from "@/components/ui";
 import { buildMonth, dateKey, shiftMonth } from "@/domain/calendar";
 import { useTheme } from "@/theme/tokens";
@@ -8,9 +8,10 @@ import { useDataStore } from "@/store/use-data-store";
 import { predict } from "@/domain/prediction";
 import { addDays, localToday } from "@/domain/dates";
 import { DataStatus } from "@/components/data-status";
-import { useSessionStore } from "@/store/use-session-store";
+
 
 export default function CalendarScreen() {
+  const [open,setOpen]=useState(false);
   const { colors } = useTheme();
   const data = useDataStore((s) => s.snapshot.data);
   const forecast = predict(data, localToday());
@@ -22,8 +23,8 @@ export default function CalendarScreen() {
     Boolean(
       forecast &&
         !forecast.overdue &&
-        date >= forecast.next &&
-        date <= addDays(forecast.next, forecast.periodDays - 1),
+        date >= forecast.earliest &&
+        date <= addDays(forecast.latest, forecast.periodDays - 1),
     );
   const [today] = useState(() => new Date());
   const [visible, setVisible] = useState(() => ({
@@ -87,18 +88,19 @@ export default function CalendarScreen() {
                       accessibilityRole="button"
                       accessibilityLabel={key + (active ? "，已选中" : "")}
                       accessibilityState={{ selected: active }}
-                      onPress={() => setSelected(key)}
+                      onPress={() => {setSelected(key);setOpen(true);}}
                       style={{
                         minHeight: 48,
                         borderRadius: 12,
-                        borderWidth: active ? 2 : 0,
+                        borderWidth: key === localToday() || active ? 2 : 0,
                         borderColor: colors.primary,
-                        backgroundColor: active ? colors.tint : "transparent",
+                        backgroundColor: isRecorded(key) ? colors.accent : isExpected(key) ? colors.tint : colors.surface,
                         alignItems: "center",
                         justifyContent: "center",
                       }}
                     >
-                      <AppText>{day}</AppText>
+                      <AppText>{day}{key===localToday()?" ·今":""}</AppText>
+                      {data.entries.some(e=>e.date===key) && <AppText kind="caption">●</AppText>}
                       {(isRecorded(key) ||
                         isExpected(key) ||
                         data.entries.some((e) => e.date === key)) && (
@@ -134,7 +136,7 @@ export default function CalendarScreen() {
           {isRecorded(selected)
             ? "已记录经期"
             : isExpected(selected)
-              ? "预计经期（中心日期推算）"
+              ? "预计经期（可能范围）"
               : "无经期标记"}
         </AppText>
         {selectedEntry && (
@@ -149,13 +151,13 @@ export default function CalendarScreen() {
         <Button
           title="记录或编辑这一天"
           onPress={() => {
-            useSessionStore.getState().selectDate(selected);
-            router.navigate("/record");
+            setOpen(true);
           }}
         />
       </Card>
+      <RecordPanel date={selected} visible={open} onClose={()=>setOpen(false)}/>
       <Notice>
-        “实”为真实经期记录，“预计”为中心日期推算，“记”为身体记录。进行中的经期只标记已确认的开始日。预测存在不确定性，不能作为可靠避孕依据。
+        “实”为真实经期记录，“预计”为淡色可能范围，“记”为身体记录。进行中的经期只标记已确认的开始日。预测存在不确定性，不能作为可靠避孕依据。
       </Notice>
     </Screen>
   );
